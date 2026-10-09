@@ -1,7 +1,7 @@
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Backend = Literal["bedrock", "ollama", "azure"]
@@ -48,5 +48,18 @@ class Settings(BaseSettings):
     database_user: str
     database_password: SecretStr
     database_name: str
+    database_host: str = ""
+    database_port: int = Field(default=0, ge=0, le=65535)
+    vector_table: str = Field(default="", pattern=r"^([a-z][a-z0-9_]{0,39})?$")
+    chunk_size_bytes: int = Field(default=1500, ge=256, le=4000)
+    chunk_overlap_bytes: int = Field(default=200, ge=0)
+    pii_spacy_model: str = ""
+    ingest_max_embedding_batches: int = Field(default=40, ge=1, le=1000)
 
     _local_aws_endpoint = field_validator("aws_endpoint_url")(require_local_endpoint)
+
+    @model_validator(mode="after")
+    def validate_chunk_overlap(self) -> "Settings":
+        if self.chunk_overlap_bytes >= self.chunk_size_bytes:
+            raise ValueError("CHUNK_OVERLAP_BYTES must be smaller than CHUNK_SIZE_BYTES")
+        return self

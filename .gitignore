@@ -21,4 +21,5 @@ crash.log
 data/raw/
 data/floci/
 data/spikes/
+data/runs/
 eval/cache/

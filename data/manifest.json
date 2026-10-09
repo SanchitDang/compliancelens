@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "purpose": "Non-commercial portfolio research. Local copies preserve source attribution; raw downloads are not published.",
+  "terms_checked_at": "2026-10-08",
+  "terms": {
+    "OSFI": "https://www.osfi-bsif.gc.ca/en/terms-conditions",
+    "FINTRAC": "https://www.canada.ca/en/transparency/terms.html",
+    "OPC": "https://www.priv.gc.ca/en/privacy-and-transparency-at-the-opc/terms-and-conditions-of-use/"
+  },
+  "documents": [
+    {
+      "document_id": "osfi-b10",
+      "regulator": "OSFI",
+      "title": "Third-Party Risk Management Guideline",
+      "source_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/third-party-risk-management-guideline",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:52.111364+00:00",
+      "sha256": "364b0bfe30e0ba50ff1fee3c16e0ff7e3fd40bde877c3057a617f6640e05ef43",
+      "resolved_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/third-party-risk-management-guideline"
+    },
+    {
+      "document_id": "osfi-b13",
+      "regulator": "OSFI",
+      "title": "Technology and Cyber Risk Management",
+      "source_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/technology-cyber-risk-management",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:53.443072+00:00",
+      "sha256": "2524c68db47415bc41cfb3ec0d05ca193a170eab265e1f4bad408dd0dbcd9a93",
+      "resolved_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/technology-cyber-risk-management"
+    },
+    {
+      "document_id": "osfi-e21",
+      "regulator": "OSFI",
+      "title": "Operational Risk Management and Resilience – Guideline",
+      "source_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/operational-risk-management-resilience-guideline",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:54.800426+00:00",
+      "sha256": "e3adc54fbec8ae5bbc74d8b8b31531dd9392651f9fa9a4b10f41657f34bae8a4",
+      "resolved_url": "https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/operational-risk-management-resilience-guideline"
+    },
+    {
+      "document_id": "fintrac-compliance",
+      "regulator": "FINTRAC",
+      "title": "Compliance program requirements",
+      "source_url": "https://fintrac-canafe.canada.ca/guidance-directives/compliance-conformite/Guide4/4-eng.php",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:56.006807+00:00",
+      "sha256": "c25442aabfd52f53fa6d39d0326130dcad8983110d81c438106d4fe9026bde83",
+      "resolved_url": "https://fintrac-canafe.canada.ca/guidance-directives/compliance-conformite/Guide4/4-eng.php"
+    },
+    {
+      "document_id": "fintrac-identification",
+      "regulator": "FINTRAC",
+      "title": "When to verify the identity of persons and entities—Financial entities",
+      "source_url": "https://fintrac-canafe.canada.ca/guidance-directives/client-clientele/client/fin-eng",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:57.071082+00:00",
+      "sha256": "c9b269312413a56c30051010b1e3c64b78b6e228345ef204f4c71cf600e1c355",
+      "resolved_url": "https://fintrac-canafe.canada.ca/guidance-directives/client-clientele/client/fin-eng"
+    },
+    {
+      "document_id": "fintrac-records",
+      "regulator": "FINTRAC",
+      "title": "Record keeping requirements for financial entities",
+      "source_url": "https://fintrac-canafe.canada.ca/guidance-directives/recordkeeping-document/record/fin-eng",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:58.153106+00:00",
+      "sha256": "353003971ebb1237562860d42109ed12d9d3fda11af9bf4c0f9a857d08c1b020",
+      "resolved_url": "https://fintrac-canafe.canada.ca/guidance-directives/recordkeeping-document/record/fin-eng"
+    },
+    {
+      "document_id": "pipeda-accountability",
+      "regulator": "OPC",
+      "title": "PIPEDA Fair Information Principle 1 – Accountability",
+      "source_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_accountability/",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:40:59.442155+00:00",
+      "sha256": "77b943c74e867aeaea9d818a4162cd8b061b5e383548b4a37f260bc5fb810f1c",
+      "resolved_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_accountability/"
+    },
+    {
+      "document_id": "pipeda-consent",
+      "regulator": "OPC",
+      "title": "PIPEDA Fair Information Principle 3 – Consent",
+      "source_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_consent/",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:41:00.555582+00:00",
+      "sha256": "2c4dc983ccab29cccbf5f06b458e826429a5d58f10eada13fd905abff9e9beab",
+      "resolved_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_consent/"
+    },
+    {
+      "document_id": "pipeda-safeguards",
+      "regulator": "OPC",
+      "title": "PIPEDA Fair Information Principle 7 – Safeguards",
+      "source_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_safeguards/",
+      "format": "html",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:41:01.723309+00:00",
+      "sha256": "de25e0ada97e3af166cfc4b95a9de3e0bad60d86e961a5edd6006949c1711bdc",
+      "resolved_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/principles/p_safeguards/"
+    },
+    {
+      "document_id": "pipeda-business-guide",
+      "regulator": "OPC",
+      "title": "Privacy Guide for Businesses",
+      "source_url": "https://www.priv.gc.ca/media/2038/guide_org_e.pdf",
+      "format": "pdf",
+      "public": true,
+      "retrieved_at": "2026-10-09T03:41:03.456401+00:00",
+      "sha256": "d51ba0eb8ee05cba3852e802b8a571f8353b1ed0155de39b69a339abb9d67b83",
+      "resolved_url": "https://www.priv.gc.ca/media/2038/guide_org_e.pdf"
+    }
+  ]
+}

@@ -23,29 +23,29 @@ Deliverables: package/configuration/CLI skeleton, pyproject and lockfile, Ruff, 
 
 Run/test: follow the setup, Compose, Terragrunt, probe, persistence, pytest, and Ruff commands in design-principles.md. Detailed evidence goes in phase-0-results.md.
 
-Deviations: Azure is now an explicitly authorized paid inference option; all AWS stays on Floci. Privacy must precede any Azure text transmission. Phase 0 made no inference calls. Docker, Terraform, Terragrunt, and uv were absent at initial inspection and installed locally through Homebrew with Colima as the free Docker runtime. No database fallback was needed. A pure-Python pg8000 bundle was used for the ARM64 Lambda SQL probe to avoid Mac-native dependency binaries. All runtime probes and 26 unit tests passed; Ruff, the secret scan, Terraform formatting/validation, and Terragrunt HCL formatting passed. See phase-0-results.md for exact evidence. Phase 1 has not started.
+Deviations: Azure is now an explicitly authorized paid inference option; all AWS stays on Floci. Privacy must precede any Azure text transmission. Phase 0 made no inference calls. Docker, Terraform, Terragrunt, and uv were absent at initial inspection and installed locally through Homebrew with Colima as the free Docker runtime. No database fallback was needed. A pure-Python pg8000 bundle was used for the ARM64 Lambda SQL probe to avoid Mac-native dependency binaries. All runtime probes and 26 unit tests passed; Ruff, the secret scan, Terraform formatting/validation, and Terragrunt HCL formatting passed. See phase-0-results.md for exact evidence.
 
 ## Phase 1: Ingestion
 
-Status: not started.
+Status: done.
 
 Goal: a repeatable, source-preserving corpus in pgvector.
 
 Deliverables: 8 to 12 public official OSFI, FINTRAC, and OPC/PIPEDA HTML/PDF documents, manifest, parsing, heading-aware chunks, metadata, batched embedding adapters, immutable table identity, and idempotency.
 
-- [ ] Check official source terms and record URLs, retrieval dates, titles, and hashes.
-- [ ] Parse HTML/PDF and preserve regulator, document, heading, page/anchor, and URL.
-- [ ] Explain and test chunking within the selected embedding model's limits.
-- [ ] Implement and test Azure, Ollama, and mock-tested Bedrock embedding adapters.
-- [ ] Put PII redaction before every Azure embedding request.
-- [ ] Create configured-dimension table and verified vector index.
-- [ ] Reject mismatched embedding identities; record identity on every row.
-- [ ] Skip re-embedding unchanged hashes; record per-run embedding token usage.
-- [ ] Test re-runs, changes, failures, and mismatched model/dimension.
+- [x] Check official source terms and record URLs, retrieval dates, titles, and hashes.
+- [x] Parse HTML/PDF and preserve regulator, document, heading, page/anchor, and URL.
+- [x] Explain and test chunking within the selected embedding model's limits.
+- [x] Implement and test Azure, Ollama, and mock-tested Bedrock embedding adapters.
+- [x] Put PII redaction before every Azure embedding request.
+- [x] Create configured-dimension table and verified vector index.
+- [x] Reject mismatched embedding identities; record identity on every row.
+- [x] Skip re-embedding unchanged hashes; record per-run embedding token usage.
+- [x] Test re-runs, changes, failures, and mismatched model/dimension.
 
-Run/test: planned `uv run compliancelens ingest`; pytest ingestion/embedding tests and a local integration re-run. Record provider, usage, row counts, and any source retrieval failures. No invented coverage.
+Run/test: `uv run compliancelens ingest --prepare-only`, `uv run compliancelens ingest`, and `uv run pytest --db-integration`. Ten documents produced 530 stored chunks. Azure reported 103465 input tokens across 34 requests; the repeat reused all 530 chunks with zero requests. All 58 tests, including nine real database tests, passed, as did Ruff and the pre-commit secret scan. See phase-1-results.md for reproduction and limitations.
 
-Deviations: none beyond the approved Azure changes. Expand the safety assessment in Phase 3 without delaying the initial Azure privacy boundary.
+Deviations: chunking uses a conservative UTF-8 byte budget rather than a provider-specific tokenizer; all Azure inputs were accepted, while live Ollama remains untested. The minimal Presidio boundary was brought forward from Phase 3 to protect Azure ingestion. Full privacy assessment remains in Phase 3. Interrupted provider runs have no durable partial vector cache; that limitation is documented.
 
 ## Phase 2: Local RAG core
 

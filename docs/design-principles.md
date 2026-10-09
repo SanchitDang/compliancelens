@@ -18,9 +18,20 @@ src/compliancelens/
   __init__.py                   package marker
   config.py                     all application settings and validation
   cli.py                        supported CLI commands
+  documents.py                  manifest validation, download, parsing, and chunks
+  embeddings.py                 Azure, Ollama, and Bedrock embedding adapters
+  privacy.py                    local Presidio redaction before provider calls
+  store.py                      pgvector identity, hash reuse, and document replacement
+  ingestion.py                  ingestion orchestration and usage reports
 tests/
   test_config.py                configuration validation tests
   test_spikes.py                local endpoint safety and spike checks
+  conftest.py                   optional database integration flag
+  test_documents.py             parsing, provenance, chunking, and manifest checks
+  test_embeddings.py            mocked batching, dimensions, usage, and redaction
+  test_privacy.py                initial local redaction examples
+  test_store.py                  PostgreSQL tests using isolated temporary schemas
+  test_ingestion.py              orchestration and failed-run reporting
 infra/
   spikes/
     main.tf                     Phase 0 AWS provider and bucket
@@ -37,6 +48,7 @@ data/
   raw/                          ignored downloaded documents
   floci/                        ignored emulator data
   spikes/                       ignored Lambda packages and probe state
+  runs/                         ignored ingestion usage journals
 eval/
   questions.json                Phase 4 document-grounded questions
   results/                      Phase 4 publishable measured reports
@@ -46,9 +58,10 @@ docs/
   phases.md                     phase checklists, commands, status, deviations
   design-principles.md           this registry and conventions
   phase-0-results.md             commands, measured spike results, prerequisites
+  phase-1-results.md             measured corpus, ingestion, usage, and re-run evidence
 ```
 
-Only Phase 0 files are created now. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phase 0 is complete; Phase 1 files above are now registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -61,7 +74,9 @@ Only Phase 0 files are created now. Future files must be registered here first. 
 - Phase 0 resource names are owned by infra/spikes/main.tf locals: raw_bucket = compliancelens-dev-spike-raw, sdk_bucket = compliancelens-dev-spike-sdk, database = compliancelens-dev-spike-db, lambda_function = compliancelens-dev-spike-query, lambda_role = compliancelens-dev-spike-lambda. run.py reads these values from terraform output JSON and must not invent replacements.
 - The Compose service is floci. The shared network is compliancelens-local; storage volume is floci-data. These are owned by docker-compose.yml.
 - The Phase 0 table is compliancelens_spike_chunks; its index is compliancelens_spike_chunks_embedding_hnsw. Both are owned by infra/spikes/run.py. Columns: id, content_hash, embedding_backend, embedding_model, embedding_dimension, embedding. It contains synthetic vectors, not real document embeddings.
-- Phase 1 will register the production chunk table and its index identity before writing a schema. Backend, model/deployment identity, and dimension are immutable per table. Querying with a different identity fails with instructions to use a separate table or re-ingest into a fresh table. A same-sized vector is not proof of model compatibility.
+- Phase 1 uses VECTOR_TABLE, initially regulatory_chunks_azure. Its companion identity table is {VECTOR_TABLE}_identity; the index is {VECTOR_TABLE}_embedding_hnsw. store.py owns those derived names. Identity columns: backend, model, dimension, fingerprint, provider_model. Chunk columns: id, document_id, content_hash, text, regulator, document_title, section_heading, page, anchor, source_url, retrieved_at, embedding_backend, embedding_model, embedding_dimension, embedding. Backend, model, and dimension are immutable per table. Fingerprints also include endpoint, API version, embedding prompt policy, and redaction policy. Querying a mismatched index refuses with separate-table/fresh-table instructions. Provider-reported model identity is checked for drift.
+- New Phase 1 settings are registered once in .env.example: DATABASE_HOST, DATABASE_PORT, VECTOR_TABLE, CHUNK_SIZE_BYTES, CHUNK_OVERLAP_BYTES, PII_SPACY_MODEL, and INGEST_MAX_EMBEDDING_BATCHES. Database host/port refer to the existing Floci RDS endpoint. No new database resource is needed. Tables use regulatory_chunks_{backend}, with a model-specific suffix when using multiple models of one backend.
+- Source choices and URLs live only in data/manifest.json. Document IDs use regulator-purpose slugs. Downloads stay in ignored data/raw, usage reports in ignored data/runs with UUID run names. Publish aggregated evidence in docs/phase-1-results.md.
 - Shared logic has one implementation. Tests may use fixtures but must not copy production logic.
 
 ## Commands
@@ -107,13 +122,19 @@ docker compose down
 
 The Homebrew/Colima commands are Mac prerequisites, run once if missing. Skip the plugin symlink if it already exists or Docker Desktop already supplies Compose. Colima is a free local Docker runtime; its VM and containers remain running until stopped. Use `colima stop` after stopping Compose if you want to release the VM's resources. This session installed these tools because they were missing.
 
-On the Windows PC, install Ollama and run `ollama pull qwen3:8b` and `ollama pull embeddinggemma:300m`. For an offline local setup, change LLM_BACKEND and EMBEDDING_BACKEND to ollama in the Mac's .env, set OLLAMA_BASE_URL to the PC's reachable LAN URL, and set EMBEDDING_DIMENSION to 768 for EmbeddingGemma after confirming the returned dimension. Configure the server's LAN listener and firewall before remote use. Mac Azure setup uses the existing .env.example selections and fills the Azure endpoint, key, and chat deployment only in .env. No inference adapter exists in Phase 0, so these selections currently validate configuration only. Full remote-server instructions and live model verification belong to later phases.
+On the Windows PC, install Ollama and run `ollama pull qwen3:8b` and `ollama pull embeddinggemma:300m`. For an offline local setup, change LLM_BACKEND and EMBEDDING_BACKEND to ollama in the Mac's .env, set OLLAMA_BASE_URL to the PC's reachable LAN URL, set EMBEDDING_DIMENSION to 768, and set VECTOR_TABLE to regulatory_chunks_ollama. Confirm the returned dimension on the first run. Configure the server's LAN listener and firewall before remote use. Mac Azure setup uses the .env.example selections and fills the endpoint, key, and chat deployment only in .env. Azure embeddings are live-tested; chat inference is not implemented until Phase 2. The Ollama embedding adapter is mock-tested only so far. Full remote-server instructions and live model verification belong to later phases.
+
+The Bedrock embedding adapter implements Titan Text Embeddings v2 through boto3 InvokeModel. Set EMBEDDING_DIMENSION to 256, 512, or 1024 and use a separate VECTOR_TABLE such as regulatory_chunks_bedrock. The configured model ID lives in .env.example. This adapter is tested with boto3 Stubber, not real Bedrock. Floci's dummy responses cannot provide usable regulatory embeddings.
 
 Direct Terraform equivalents, from infra/spikes: terraform init; terraform validate; terraform plan -out=phase0.tfplan; terraform apply phase0.tfplan; terraform output -json. Use one tool's workflow at a time. State is local in infra/spikes, ignored, never stored on real AWS. The spike wrapper explicitly selects Terraform rather than Terragrunt's possible OpenTofu default.
 
 Terragrunt reads only endpoint and region from config.py using the root .env; it does not export secrets. Direct Terraform plan/apply require `-var='endpoint=<local endpoint>' -var='region=<configured region>'` from that configuration. The probe injects generated DATABASE_HOST and DATABASE_PORT into its Lambda environment; these are runtime outputs, not user configuration. The other database fields come from .env and are local-only credentials. Probe state, results JSON, and ZIP packages stay in ignored data/spikes.
 
-Ingest, ask, and eval commands do not exist in Phase 0. Their planned names are `uv run compliancelens ingest`, `uv run compliancelens ask "question"`, and `uv run compliancelens eval`. Register the exact arguments here when implemented. Do not present planned commands as working features.
+Phase 1 commands: `uv run compliancelens ingest --download-only` records/downloads approved public documents without provider calls; `uv run compliancelens ingest --prepare-only` parses/chunks/redacts without vector writes or provider calls; `uv run compliancelens ingest` writes vectors and reuses unchanged hashes; `uv run compliancelens ingest --refresh` re-downloads before ingestion. `uv run pytest tests/test_store.py --db-integration` runs real PostgreSQL tests in temporary schemas; ordinary pytest skips them.
+
+Presidio uses the pinned en_core_web_sm 3.8.0 official release wheel as a Python dependency. uv sync installs it; no runtime model downloads. Downloads validate official HTTPS hosts and redirects, consult robots.txt, limit size, and pause between requests. Retrieval timestamps are recorded in UTC.
+
+Ask and eval remain planned: `uv run compliancelens ask "question"` and `uv run compliancelens eval`. They are unavailable until their phases.
 
 ## Code style
 
@@ -127,8 +148,8 @@ Ingest, ask, and eval commands do not exist in Phase 0. Their planned names are 
 
 - Secrets live only in ignored .env. .env.example contains empty Azure key and endpoint fields. No credential copying, key printing, SDK debug logging, or secrets in Terraform variables, state, Lambda bundles, reports, or git.
 - AWS uses only dummy local credentials, explicit emulator endpoints, and no real account. Fail closed for spike endpoints outside loopback or the registered Compose host. Never mount host AWS credentials.
-- Run a pre-commit secret scan using detect-secrets and Ruff. Scan files without displaying discovered secret values. Hooks are defense in depth, not a guarantee. Only the Floci dummy credential and rejection-fixture lines have narrow inline allowlist pragmas; do not exclude source files wholesale.
-- Azure replaces the original all-free inference requirement at the user's request. Phase 0 makes no Azure calls. Later Azure calls require PII redaction first, and context comes only from public regulatory documents. Until the safety boundary exists, Azure text transmission remains disabled.
+- Run a pre-commit secret scan using detect-secrets and Ruff. Disable scanner network verification. Hooks are defense in depth, not a guarantee. Floci dummy credentials and rejection-fixture lines have narrow inline allowlist pragmas; exact JSON sha256 checksum lines have an exclusion pattern. No source/manifest file is excluded wholesale.
+- Azure replaces the original all-free inference requirement at the user's request. Phase 0 makes no Azure calls. Later Azure calls require PII redaction first, and context comes only from public regulatory documents. The Phase 1 Presidio boundary must remain on every embedding path; new chat/evaluation paths must redact before sending text.
 - LLM_BACKEND accepts bedrock, ollama, azure; its code default is bedrock. EMBEDDING_BACKEND accepts the same values. .env.example selects azure for both on the Mac. Windows instructions select ollama for both and set the configured dimension to the observed embedding model dimension.
 - Cap completion tokens (initial cap 2048), batch embeddings (initial batch size 16), disable hidden SDK retries for paid inference, and record input/output/embedding token usage by backend, model, and run. Token usage is not a dollar estimate without verified deployment pricing.
 - Skip unchanged content hashes within the same embedding identity. Cache eval and judge responses on disk by a hash including the redacted prompt, backend, deployment/model, API version, and generation settings. Do not cache raw PII. The evaluation set stays at 30 to 40 questions.

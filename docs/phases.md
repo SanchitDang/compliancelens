@@ -1,0 +1,184 @@
+# Phase plan
+
+Read design-principles.md before changing this repository. Finish one phase, record evidence and deviations, update architecture.md, then stop until the user says next. Commands for implemented features are canonical in design-principles.md. Future commands below are planned and unavailable until their phase.
+
+## Phase 0: Scaffold and spikes
+
+Status: done.
+
+Goal: establish the Python project and prove the local infrastructure can support the design.
+
+Deliverables: package/configuration/CLI skeleton, pyproject and lockfile, Ruff, pytest, pre-commit secret scan, ignored secrets, Compose, three infrastructure probes, Lambda SQL connectivity proof, and recorded evidence.
+
+- [x] Create and validate the three source-of-truth docs.
+- [x] Create Python 3.12 environment, package, config, and config-check CLI.
+- [x] Add README, .env.example, .gitignore, Compose, and pre-commit.
+- [x] Pass configuration tests and lint/format checks.
+- [x] Start Floci; boto3 creates, writes, and reads an S3 object.
+- [x] Create Floci RDS with pgvector; test configured-dimension vectors and HNSW.
+- [x] Prove Terraform plus Terragrunt creates an S3 bucket, verified independently.
+- [x] Invoke a Lambda that executes SQL against the RDS database on Docker networking.
+- [x] Prove emulator and database persistence after restart.
+- [x] Record commands, versions, digests, results, limitations, and stop.
+
+Run/test: follow the setup, Compose, Terragrunt, probe, persistence, pytest, and Ruff commands in design-principles.md. Detailed evidence goes in phase-0-results.md.
+
+Deviations: Azure is now an explicitly authorized paid inference option; all AWS stays on Floci. Privacy must precede any Azure text transmission. Phase 0 made no inference calls. Docker, Terraform, Terragrunt, and uv were absent at initial inspection and installed locally through Homebrew with Colima as the free Docker runtime. No database fallback was needed. A pure-Python pg8000 bundle was used for the ARM64 Lambda SQL probe to avoid Mac-native dependency binaries. All runtime probes and 26 unit tests passed; Ruff, the secret scan, Terraform formatting/validation, and Terragrunt HCL formatting passed. See phase-0-results.md for exact evidence. Phase 1 has not started.
+
+## Phase 1: Ingestion
+
+Status: not started.
+
+Goal: a repeatable, source-preserving corpus in pgvector.
+
+Deliverables: 8 to 12 public official OSFI, FINTRAC, and OPC/PIPEDA HTML/PDF documents, manifest, parsing, heading-aware chunks, metadata, batched embedding adapters, immutable table identity, and idempotency.
+
+- [ ] Check official source terms and record URLs, retrieval dates, titles, and hashes.
+- [ ] Parse HTML/PDF and preserve regulator, document, heading, page/anchor, and URL.
+- [ ] Explain and test chunking within the selected embedding model's limits.
+- [ ] Implement and test Azure, Ollama, and mock-tested Bedrock embedding adapters.
+- [ ] Put PII redaction before every Azure embedding request.
+- [ ] Create configured-dimension table and verified vector index.
+- [ ] Reject mismatched embedding identities; record identity on every row.
+- [ ] Skip re-embedding unchanged hashes; record per-run embedding token usage.
+- [ ] Test re-runs, changes, failures, and mismatched model/dimension.
+
+Run/test: planned `uv run compliancelens ingest`; pytest ingestion/embedding tests and a local integration re-run. Record provider, usage, row counts, and any source retrieval failures. No invented coverage.
+
+Deviations: none beyond the approved Azure changes. Expand the safety assessment in Phase 3 without delaying the initial Azure privacy boundary.
+
+## Phase 2: Local RAG core
+
+Status: not started.
+
+Goal: grounded answers with traceable citations and evidence-based abstention.
+
+Deliverables: LangChain retrieval/generation pipeline, small backend interface, AzureOpenAI chat, Ollama chat, boto3 Bedrock Converse, output cap, and CLI.
+
+- [ ] Implement all three chat adapters and mock-test their request/response contracts.
+- [ ] Verify GPT-5 parameter omissions and max_completion_tokens.
+- [ ] Redact PII before Azure requests and preserve separate system/user messages.
+- [ ] Retrieve only from a matching embedding identity.
+- [ ] Cite regulator, document, and section with source URL/page/anchor.
+- [ ] Refuse weak-evidence questions; test unsupported and out-of-scope cases.
+- [ ] Record per-run chat token usage and incomplete-output behavior.
+- [ ] Run actual local questions and state which provider was exercised.
+
+Run/test: planned `uv run compliancelens ask "question"`; pytest backend/retrieval/citation tests and real selected-provider requests. Bedrock remains mock-tested only.
+
+Deviations: none.
+
+## Phase 3: Safety
+
+Status: not started.
+
+Goal: assess and improve redaction and prompt injection defenses without overstating guarantees.
+
+Deliverables: Presidio assessment, redacted logs/input, untrusted context boundaries, input/output checks, PII and injection fixtures, measured missed cases.
+
+- [ ] Evaluate Presidio against Canadian PII examples and document recognizer limits.
+- [ ] Ensure all Azure text paths and logs pass through redaction.
+- [ ] Keep retrieved content separate from trusted instructions.
+- [ ] Add input/output checks and known injection attempts.
+- [ ] Test malicious source text, input attacks, and PII leakage paths.
+- [ ] Report caught and missed examples without claiming complete protection.
+
+Run/test: pytest safety tests, fixture-based attack/PII report, and CLI refusal examples. Do not send raw PII to hosted providers for a test.
+
+Deviations: the initial Azure redaction boundary is implemented earlier, as required for privacy.
+
+## Phase 4: Evaluation
+
+Status: not started.
+
+Goal: measure retrieval hit rate, citation correctness, and answer accuracy against the ingested corpus.
+
+Deliverables: 30 to 40 document-grounded questions, expected facts/sources, evaluator, disk cache, usage ledger, readable reports, and measured improvement comparisons.
+
+- [ ] Write questions from actual ingested documents with expected sources/key facts.
+- [ ] Define metric denominators, failure handling, and judge limitations.
+- [ ] Cache redacted eval and judge responses by full prompt/provider/settings identity.
+- [ ] Record usage, cache hits, provider/model, corpus version, and configuration.
+- [ ] Run baseline and report only actual scores.
+- [ ] Try 2 or 3 controlled improvements and compare actual results.
+
+Run/test: planned `uv run compliancelens eval`; pytest evaluator/cache tests. Publish reports in eval/results with backend identity on every reported number. Describe LLM-judge subjectivity and provider costs.
+
+Deviations: none.
+
+## Phase 5: Infrastructure on Floci
+
+Status: not started.
+
+Goal: reproducible dev and prod-style AWS-shaped infrastructure entirely on Floci.
+
+Deliverables: Terraform modules, two Terragrunt environments, raw/intermediate S3 storage, Step Functions ingestion workflow, parse/chunk/embed/query Lambdas, API Gateway, scoped IAM, and pgvector RDS.
+
+- [ ] Register module files and all names in design-principles.md first.
+- [ ] Define names once in Terraform locals and share references/outputs.
+- [ ] Scope IAM policies to required resources and operations.
+- [ ] Keep all provider endpoints local and state reliable.
+- [ ] Validate, plan, and apply both environments on Floci.
+- [ ] Record faithful, shallow, missing, or unsupported behavior per resource.
+
+Run/test: Terraform fmt/validate and Terragrunt init/validate/plan/apply in each registered environment, followed by AWS API verification. Exact commands are added when implemented.
+
+Deviations: none.
+
+## Phase 6: Lambda and API
+
+Status: not started.
+
+Goal: working ingestion orchestration and query requests through emulated AWS services.
+
+Deliverables: Lambda packaging, artifact-based Step Functions flow, query API with validation, and real Floci requests.
+
+- [ ] Package Python dependencies for the Lambda runtime and architecture.
+- [ ] Wire parse, chunk, and embed stages end to end using S3 artifact references.
+- [ ] Configure selected-provider/network access without committing secrets.
+- [ ] Implement request validation and structured API error responses.
+- [ ] Test successful/failed ingestion executions and valid/invalid API requests.
+- [ ] Confirm citations, abstention, redaction, and model identity through the API.
+
+Run/test: local Step Functions executions and HTTP requests against the Terraform-output API endpoint, plus pytest handler tests. Record actual execution evidence.
+
+Deviations: none.
+
+## Phase 7: Monitoring
+
+Status: not started.
+
+Goal: observable behavior with redacted telemetry and useful local alarms.
+
+Deliverables: structured CloudWatch logs, latency/retrieval/refusal/guardrail/error metrics, single-metric alarms, and inspection commands.
+
+- [ ] Redact before structured logs are emitted.
+- [ ] Publish and verify custom metric statistics.
+- [ ] Create errors/latency alarms and test their actual transitions.
+- [ ] Provide simple log/metric/alarm viewing commands.
+- [ ] Document Floci limits versus real CloudWatch.
+
+Run/test: representative API and failure requests, CloudWatch get/filter/statistics/describe calls, and pytest telemetry/redaction tests. Verify evaluation rather than merely alarm creation.
+
+Deviations: avoid metric-math alarms because Floci documents no evaluation for them.
+
+## Phase 8: Wrap up
+
+Status: not started.
+
+Goal: reproducible portfolio evidence and honest resume wording.
+
+Deliverables: CI, concise README linking these docs, architecture diagram, Mac Azure and Windows Ollama setup, real eval results, limitations, and resume-gap report.
+
+- [ ] Add GitHub Actions lint, tests, and Terraform validation.
+- [ ] Verify documented setup/run/evaluation commands.
+- [ ] Record the backend/model behind every reported number.
+- [ ] State plainly that AWS runs on Floci and no real AWS was tested.
+- [ ] Claim real Azure AI Foundry inference only after it actually runs.
+- [ ] State Bedrock is mock-tested only; compare all three resume bullets to evidence.
+- [ ] Suggest accurate wording and remaining gap-closing options without editing the resume.
+- [ ] Update all project docs and stop.
+
+Run/test: the complete implemented check suite and clean setup checks, with CI results if available. Publish actual measured evaluation evidence and limitations.
+
+Deviations: Azure calls may incur costs at the user's request. A paid real-Bedrock smoke test is only a possible future option, never part of the current authorization.

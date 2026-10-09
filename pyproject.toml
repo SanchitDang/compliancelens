@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "compliancelens"
+version = "0.1.0"
+description = "A source-citing assistant for public Canadian regulatory documents"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "boto3>=1.35,<2",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.7,<3",
+]
+
+[project.scripts]
+compliancelens = "compliancelens.cli:main"
+
+[dependency-groups]
+dev = [
+  "detect-secrets==1.5.0",
+  "pre-commit>=4,<5",
+  "pytest>=8,<10",
+  "ruff>=0.11,<1",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["data", ".terragrunt-cache", ".terraform"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/compliancelens"]

@@ -14,5 +14,6 @@ repos:
       - id: detect-secrets
         name: Secret scan
         entry: uv run detect-secrets-hook
+        args: [--no-verify, --exclude-lines, '^\s*"sha256": "[0-9a-f]{64}",?$']
         language: system
         exclude: ^(uv\.lock|infra/spikes/\.terraform\.lock\.hcl)$

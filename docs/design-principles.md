@@ -40,6 +40,7 @@ tests/
   test_rag.py                    retrieval, abstention, citations, and query journals
   test_safety.py                 attacks, leakage boundaries, and safety assessment
   test_evaluation.py             cache isolation, benchmark validation, and metric failures
+  test_infrastructure.py         local provisioning boundaries and placeholder contracts
   fixtures/safety.json           synthetic PII, attacks, and benign controls
 infra/
   spikes/
@@ -49,9 +50,25 @@ infra/
     lambda_handler.py           SQL connectivity probe, packaged by run.py
     .terraform.lock.hcl         committed provider version and checksum lock
     backend.tf                  generated only in Terragrunt cache, stable local state path
-  modules/                      Phase 5 reusable Terraform infrastructure
-  environments/dev/             Phase 5 local development configuration
-  environments/prod/            Phase 5 production-style local configuration
+  root.hcl                      shared Terragrunt source, inputs, local state generation
+  settings.py                   validated local inputs, dummy credentials from .env.example
+  verify.py                     Phase 5 AWS API, SQL, IAM, and scaffold verification
+  modules/platform/
+    main.tf                     provider, versions, and sole resource-name locals
+    variables.tf                validated module inputs, ephemeral dummy DB password
+    storage.tf                  raw/intermediate buckets and versioning
+    database.tf                 Docker-backed pgvector RDS instance
+    compute.tf                  four placeholder Lambdas, logs, scoped roles/policies
+    workflow.tf                 artifact-reference Step Functions definition and role
+    api.tf                      REST query API, Lambda integration and invoke permission
+    outputs.tf                  names, ARNs, database endpoint, and local API URL
+    scaffold_handler.py         explicit Phase 6 not-implemented responses
+  environments/dev/
+    terragrunt.hcl              dev inputs using the shared root
+    .terraform.lock.hcl         committed provider lock
+  environments/prod/
+    terragrunt.hcl              prod-style local inputs using the shared root
+    .terraform.lock.hcl         committed provider lock
 data/
   manifest.json                 Phase 1 public source inventory
   raw/                          ignored downloaded documents
@@ -73,9 +90,10 @@ docs/
   phase-2-results.md             measured RAG answers, refusals, usage, and limits
   phase-3-results.md             measured safety fixtures, misses, and limitations
   phase-4-results.md             evaluation evidence, reproduction, and limitations
+  phase-5-results.md             resource/API verification and measured emulator limits
 ```
 
-Phases 0 through 4 are complete; files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phases 0 through 5 are complete; files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -192,3 +210,14 @@ Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtu
 - Chat cache keys include redacted system/user prompts, backend/deployment/API/endpoint fingerprint/output cap, corpus and question-set hashes, guard and redaction policies. Store only complete responses unchanged by local output redaction, checking both the response and every decoded JSON string field before storage or reuse. Judge data is redacted field by field before serialization, then again at the provider boundary. Incomplete or detected-sensitive outputs are withheld from the cache and may require a new request on repetition. Query-vector caches include redacted question, immutable embedding identity, and the stored provider model; validate cached dimensions and model before use. Caches live in ignored eval/cache. Reused responses retain original usage separately from new requests. Deployment aliases require explicit cache refresh after provider upgrades.
 - Each UUID evaluation journal lives in ignored data/runs. Persist after each question and on failure. Record actual provider models, per-variant usage and cache hits, run/configuration/corpus identity, per-question retrieval IDs and safe answers, and unknown usage. Publish only aggregate comparison artifacts in the registered results files. Exact provenance hashes in published JSON use the sha256 checksum key; exact 64-character chunk_id values are public content identifiers, also narrowly excluded from entropy scanning.
 - Retrieval hit rate counts supported questions retrieving at least one exact gold chunk. Answer accuracy counts fully correct, complete judge-approved answers divided by all supported questions, including failures and refusals. Citation correctness counts judge-supported claim/source pairs divided by all emitted pairs; missing or invalid judge results count zero and are separately identified. Unsupported-question refusal rate is separate. Report integer denominators and never drop errors. This is a development set with a same-model reference-guided judge, not an independent legal audit or held-out accuracy estimate.
+
+## Phase 5 infrastructure conventions
+
+- infra/modules/platform/main.tf locals own all names: prefix compliancelens-{environment}; buckets {prefix}-raw and {prefix}-intermediate; database {prefix}-db; functions {prefix}-{parse,chunk,embed,query}; per-function roles {function}-role and policies {function}-access; workflow {prefix}-ingestion, role {prefix}-ingestion-role, policy {prefix}-ingestion-invoke; REST API {prefix}-api; verification-only role {prefix}-authorization-role and policy {prefix}-authorization-access, reusing the parse policy with account-root trust. Lambda logs derive /aws/lambda/{function}. API route is POST /query, stage equals environment. Terraform outputs own generated IDs, ARNs, database endpoints, and local invocation URLs.
+- One reusable platform module is shared by dev and prod-style environments. Both run on Floci. Shared root.hcl owns source selection, settings extraction, and generated local backend.tf; state stays in each environment directory, outside Terragrunt caches. Dev uses seven-day logs and one reserved Lambda execution; prod-style uses thirty-day logs and two. These are configuration choices, not claims of AWS production readiness.
+- infra/settings.py reads endpoint/region through config.py and obtains dummy SQL credentials explicitly from .env.example, with process overrides disabled for those example values. No Azure credentials enter infrastructure inputs, bundles, outputs, or state. The dummy database password is an ephemeral Terraform input passed only to password_wo, requiring Terraform >=1.11; inspect plan/state to verify it is absent. This dummy-only input is compatible with the existing prohibition on private secrets in Terraform variables.
+- New RDS instances isolate environments; the indexed CLI database remains the Phase 0 instance until Phase 6 migration is implemented. store.py remains the only implementation of configured-dimension pgvector tables and identities. Verification initializes the registered vector table in each empty database, uses synthetic vectors only in temporary schemas named phase5_{uuid}, using temporary table phase5_vectors and its store.py-derived identity/index names, with an explicitly synthetic model identity, and verifies HNSW. Application tables stay empty until real ingestion. No paid inference is needed in Phase 5.
+- IAM policies scope bucket objects, function logs, and workflow/API invocation to the appropriate resources. Parse reads raw and writes intermediate artifacts; chunk reads/writes intermediate; embed reads intermediate; query has logs only until Phase 6 credential/provider wiring. Stage outputs are S3 artifact references. Placeholder stages raise an explicit unimplemented error; query returns HTTP 501. Never count placeholder success as document ingestion or RAG inference.
+- infra/verify.py reads outputs through Terragrunt, verifies both environments, and writes ignored UUID journals under data/runs. It uses only dummy local AWS credentials and rejects nonlocal endpoints. IAM policy documents are inspected; FLOCI_SERVICES_IAM_ENFORCEMENT_ENABLED is registered once in .env.example and consumed by Compose. Enable it for actual assumed-role allow/deny probes; admin test credentials deliberately bypass enforcement. The verifier first checks that root cannot assume the Lambda-only role, then uses the verification role to test own-bucket reads and cross-environment denial. Record simulation and runtime checks separately, without claiming every AWS authorization path is faithful.
+- Generated backend.tf, scaffold ZIPs, plan files, provider caches, and state stay in tool-standard ignored paths. Phase 5 adds only the Compose-owned FLOCI_SERVICES_IAM_ENFORCEMENT_ENABLED flag, set true in the example and local setup. Never publish raw Terraform state or credentials.
+- Setup/run: `docker compose up -d --wait`; from each infra/environments/{dev,prod}, run `terragrunt init`, `terragrunt validate`, `terragrunt plan -out=phase5.tfplan`, `terragrunt apply phase5.tfplan`, and `terragrunt plan -detailed-exitcode`. From root, run `terraform fmt -check -recursive infra`, `terragrunt hcl fmt --check --working-dir infra`, `uv run python infra/verify.py`, `uv run pytest --db-integration`, and `uv run pre-commit run --all-files`. Direct Terraform equivalents operate in the Terragrunt-downloaded platform directory with the same validated inputs and generated backend; use Terragrunt as the canonical workflow.

@@ -16,4 +16,4 @@ repos:
         entry: uv run detect-secrets-hook
         args: [--no-verify, --exclude-lines, '^\s*"(sha256|chunk_id)": "[0-9a-f]{64}",?$']
         language: system
-        exclude: ^(uv\.lock|infra/spikes/\.terraform\.lock\.hcl)$
+        exclude: ^(uv\.lock|infra/(spikes|environments/(dev|prod))/\.terraform\.lock\.hcl)$

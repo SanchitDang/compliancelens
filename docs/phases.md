@@ -89,22 +89,22 @@ Deviations: the initial Azure redaction boundary was implemented earlier. Strong
 
 ## Phase 4: Evaluation
 
-Status: not started.
+Status: done.
 
 Goal: measure retrieval hit rate, citation correctness, and answer accuracy against the ingested corpus.
 
 Deliverables: 30 to 40 document-grounded questions, expected facts/sources, evaluator, disk cache, usage ledger, readable reports, and measured improvement comparisons.
 
-- [ ] Write questions from actual ingested documents with expected sources/key facts.
-- [ ] Define metric denominators, failure handling, and judge limitations.
-- [ ] Cache redacted eval and judge responses by full prompt/provider/settings identity.
-- [ ] Record usage, cache hits, provider/model, corpus version, and configuration.
-- [ ] Run baseline and report only actual scores.
-- [ ] Try 2 or 3 controlled improvements and compare actual results.
+- [x] Write questions from actual ingested documents with expected sources/key facts.
+- [x] Define metric denominators, failure handling, and judge limitations.
+- [x] Cache redacted eval and judge responses by full prompt/provider/settings identity.
+- [x] Record usage, cache hits, provider/model, corpus version, and configuration.
+- [x] Run baseline and report only actual scores.
+- [x] Try 2 or 3 controlled improvements and compare actual results.
 
-Run/test: planned `uv run compliancelens eval`; pytest evaluator/cache tests. Publish reports in eval/results with backend identity on every reported number. Describe LLM-judge subjectivity and provider costs.
+Run/test: `RETRIEVAL_TOP_K=6 uv run compliancelens eval`, `uv run pytest --db-integration`, and the registered Ruff/pre-commit checks. All 138 tests passed. Azure evaluation completed 34 questions for each of three variants. Final judge answer accuracy was 23/30 for baseline and 27/30 for focused context; all variants refused the four unsupported questions. See phase-4-results.md and eval/results/phase-4.md for denominators, provider identity, costs, and limitations.
 
-Deviations: none.
+Deviations: the initial judge grouped citation decisions by claim; an interrupted development run led to explicit numbered pairs. Its usage and one request with unknown usage remain recorded. A final replay verified decoded-field redaction and safe cache reuse. Two controlled retrieval candidates were measured; defaults remain unchanged pending held-out validation. The judge uses the same Azure deployment as generation, so these are subjective development-set scores.
 
 ## Phase 5: Infrastructure on Floci
 

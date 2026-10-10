@@ -17,6 +17,11 @@ def main() -> None:
     mode.add_argument("--download-only", action="store_true")
     mode.add_argument("--prepare-only", action="store_true")
     ingestion.add_argument("--refresh", action="store_true")
+    evaluation = commands.add_parser("eval")
+    evaluation.add_argument(
+        "--variant", choices=("all", "baseline", "wider", "focused"), default="all"
+    )
+    evaluation.add_argument("--refresh-cache", action="store_true")
     query = commands.add_parser("ask")
     query.add_argument("question")
     arguments = parser.parse_args()
@@ -30,7 +35,7 @@ def main() -> None:
 
         print(json.dumps(assess_safety(Path.cwd(), Redactor(settings.pii_spacy_model)), indent=2))
         return
-    if arguments.command in {"ask", "ingest"}:
+    if arguments.command in {"ask", "ingest", "eval"}:
         from compliancelens.store import IdentityMismatch
 
         try:
@@ -38,6 +43,10 @@ def main() -> None:
                 from compliancelens.rag import ask
 
                 report = ask(settings, Path.cwd(), arguments.question)
+            elif arguments.command == "eval":
+                from compliancelens.evaluation import evaluate
+
+                report = evaluate(settings, Path.cwd(), arguments.variant, arguments.refresh_cache)
             else:
                 from compliancelens.ingestion import ingest
 
@@ -50,7 +59,9 @@ def main() -> None:
                 )
         except Exception as error:
             detail = str(error) if isinstance(error, IdentityMismatch) else type(error).__name__
-            operation = "Query" if arguments.command == "ask" else "Ingestion"
+            operation = {"ask": "Query", "ingest": "Ingestion", "eval": "Evaluation"}[
+                arguments.command
+            ]
             parser.exit(1, f"{operation} failed: {detail}. See data/runs for safe usage records.\n")
         print(json.dumps(report, indent=2, default=str))
         return

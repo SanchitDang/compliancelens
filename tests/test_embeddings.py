@@ -132,3 +132,22 @@ def test_endpoint_and_model_are_part_of_identity(redactor: Redactor) -> None:
     first = Embedder(settings(), redactor)
     second = Embedder(settings(azure_openai_endpoint="https://other.openai.azure.com"), redactor)
     assert first.identity.fingerprint != second.identity.fingerprint
+
+
+def test_ollama_query_uses_search_prefix_without_changing_index_identity(
+    redactor: Redactor,
+) -> None:
+    calls = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        calls.append(json.loads(request.content))
+        return httpx.Response(200, json={"embeddings": [[1.0, 0.0]], "prompt_eval_count": 4})
+
+    with httpx.Client(
+        base_url="http://localhost:11434", transport=httpx.MockTransport(respond)
+    ) as client:
+        embedder = Embedder(settings(embedding_backend="ollama"), redactor, client)
+        identity = embedder.identity
+        embedder.embed_query("How do safeguards work?")
+        assert embedder.identity == identity
+    assert calls[0]["input"] == ["task: search result | query: How do safeguards work?"]

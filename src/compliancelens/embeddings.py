@@ -68,7 +68,10 @@ class Embedder:
             hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest(),
         )
 
-    def embed(self, texts: list[str]) -> EmbeddingBatch:
+    def embed_query(self, text: str) -> EmbeddingBatch:
+        return self.embed([text], query=True)
+
+    def embed(self, texts: list[str], *, query: bool = False) -> EmbeddingBatch:
         if not texts or len(texts) > self.settings.embedding_batch_size:
             raise ValueError("Embedding input must be a nonempty configured-size batch")
         redacted = [self.redactor.redact(text) for text in texts]
@@ -77,7 +80,7 @@ class Embedder:
         if self.identity.backend == "azure":
             result = self._azure(safe_texts, redactions)
         elif self.identity.backend == "ollama":
-            result = self._ollama(safe_texts, redactions)
+            result = self._ollama(safe_texts, redactions, query)
         else:
             result = self._bedrock(safe_texts, redactions)
         if len(result.vectors) != len(texts):
@@ -126,7 +129,7 @@ class Embedder:
             redactions,
         )
 
-    def _ollama(self, texts: list[str], redactions: int) -> EmbeddingBatch:
+    def _ollama(self, texts: list[str], redactions: int, query: bool) -> EmbeddingBatch:
         if not self.client:
             self.client = httpx.Client(base_url=self.settings.ollama_base_url, timeout=180)
         self.requests_started += 1
@@ -134,7 +137,12 @@ class Embedder:
             "/api/embed",
             json={
                 "model": self.identity.model,
-                "input": [f"title: none | text: {text}" for text in texts],
+                "input": [
+                    f"task: search result | query: {text}"
+                    if query
+                    else f"title: none | text: {text}"
+                    for text in texts
+                ],
                 "truncate": False,
             },
         )

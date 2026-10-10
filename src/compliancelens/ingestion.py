@@ -1,6 +1,7 @@
 import hashlib
 import json
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -37,6 +38,43 @@ def prepare_chunks(chunks: list[Chunk], redactor: Redactor) -> tuple[list[Chunk]
 
 def embedding_text(chunk: Chunk) -> str:
     return f"Document: {chunk.document_title}\nSection: {chunk.section_heading}\n\n{chunk.text}"
+
+
+def persist_chunks(
+    prepared: dict[str, list[Chunk]],
+    settings: Settings,
+    embedder: Embedder,
+    store: VectorStore,
+    report: dict,
+    save_report: Callable[[dict], None],
+) -> None:
+    unique = {chunk.content_hash: chunk for chunks in prepared.values() for chunk in chunks}
+    vectors = store.cached_vectors(list(unique))
+    pending = [chunk for key, chunk in unique.items() if key not in vectors]
+    batch_size = settings.embedding_batch_size
+    batches_needed = (len(pending) + batch_size - 1) // batch_size
+    if batches_needed > settings.ingest_max_embedding_batches:
+        raise ValueError(
+            "Ingestion exceeds INGEST_MAX_EMBEDDING_BATCHES; review prepare-only first"
+        )
+    report["unique_embedding_inputs"] = len(unique)
+    report["chunks_reused"] = report["total_chunks"] - len(pending)
+    for offset in range(0, len(pending), batch_size):
+        batch = pending[offset : offset + batch_size]
+        result = embedder.embed([embedding_text(chunk) for chunk in batch])
+        store.check_provider_model(result.provider_model)
+        vectors.update(
+            {
+                chunk.content_hash: vector
+                for chunk, vector in zip(batch, result.vectors, strict=True)
+            }
+        )
+        report["embedding_batches"] += 1
+        report["chunks_embedded"] += len(batch)
+        report["usage_records"] = embedder.usage_records
+        save_report(report)
+    for document_id, chunks in prepared.items():
+        store.replace_document(document_id, chunks, vectors)
 
 
 def ingest(
@@ -98,33 +136,14 @@ def ingest(
         connection = connect(settings)
         store = VectorStore(connection, settings.vector_table, embedder.identity)
         store.initialize()
-        unique = {chunk.content_hash: chunk for chunks in prepared.values() for chunk in chunks}
-        vectors = store.cached_vectors(list(unique))
-        pending = [chunk for key, chunk in unique.items() if key not in vectors]
-        batch_size = settings.embedding_batch_size
-        batches_needed = (len(pending) + batch_size - 1) // batch_size
-        if batches_needed > settings.ingest_max_embedding_batches:
-            raise ValueError(
-                "Ingestion exceeds INGEST_MAX_EMBEDDING_BATCHES; review prepare-only first"
-            )
-        report["unique_embedding_inputs"] = len(unique)
-        report["chunks_reused"] = report["total_chunks"] - len(pending)
-        for offset in range(0, len(pending), batch_size):
-            batch = pending[offset : offset + batch_size]
-            result = embedder.embed([embedding_text(chunk) for chunk in batch])
-            store.check_provider_model(result.provider_model)
-            vectors.update(
-                {
-                    chunk.content_hash: vector
-                    for chunk, vector in zip(batch, result.vectors, strict=True)
-                }
-            )
-            report["embedding_batches"] += 1
-            report["chunks_embedded"] += len(batch)
-            report["usage_records"] = embedder.usage_records
-            report_path.write_text(json.dumps(report, indent=2) + "\n")
-        for document_id, chunks in prepared.items():
-            store.replace_document(document_id, chunks, vectors)
+        persist_chunks(
+            prepared,
+            settings,
+            embedder,
+            store,
+            report,
+            lambda value: report_path.write_text(json.dumps(value, indent=2) + "\n"),
+        )
         store.remove_documents_except(list(prepared))
         report["stored_rows"] = store.row_count()
         report["status"] = "completed"

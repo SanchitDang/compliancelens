@@ -6,12 +6,17 @@ from dotenv import dotenv_values
 from compliancelens.config import Settings
 
 
+def image_uri(root: Path) -> str:
+    return json.loads((root / "dist" / "image.json").read_text())["image_uri"]
+
+
 def terraform_inputs(root: Path) -> dict[str, str]:
     current = Settings(_env_file=root / ".env")
     example = Settings(
         _env_file=None, **{k.lower(): v for k, v in dotenv_values(root / ".env.example").items()}
     )
     return {
+        "image_uri": image_uri(root),
         "endpoint": current.aws_endpoint_url,
         "region": current.aws_default_region,
         "database_user": example.database_user,

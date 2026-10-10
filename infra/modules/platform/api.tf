@@ -29,7 +29,7 @@ resource "aws_api_gateway_deployment" "query" {
   rest_api_id = aws_api_gateway_rest_api.query.id
   triggers    = { configuration = sha1(jsonencode([aws_api_gateway_method.query.id, aws_api_gateway_integration.query.uri])) }
   depends_on  = [aws_api_gateway_integration.query, aws_lambda_permission.api]
-  lifecycle { create_before_destroy = true }
+  lifecycle { create_before_destroy = false }
 }
 resource "aws_api_gateway_stage" "query" {
   rest_api_id   = aws_api_gateway_rest_api.query.id

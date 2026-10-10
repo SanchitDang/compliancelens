@@ -27,6 +27,7 @@ src/compliancelens/
   rag.py                        LangChain query pipeline, evidence checks, citations
   safety.py                     local injection checks and fixture assessment
   evaluation.py                 benchmark validation, caches, judges, metrics, run journals
+  handlers.py                   Lambda stages, trusted artifacts, validated query API
 tests/
   test_config.py                configuration validation tests
   test_spikes.py                local endpoint safety and spike checks
@@ -40,7 +41,8 @@ tests/
   test_rag.py                    retrieval, abstention, citations, and query journals
   test_safety.py                 attacks, leakage boundaries, and safety assessment
   test_evaluation.py             cache isolation, benchmark validation, and metric failures
-  test_infrastructure.py         local provisioning boundaries and placeholder contracts
+  test_infrastructure.py         local provisioning boundaries and historical scaffolds
+  test_handlers.py               request validation and trusted artifact boundaries
   fixtures/safety.json           synthetic PII, attacks, and benign controls
 infra/
   spikes/
@@ -52,17 +54,20 @@ infra/
     backend.tf                  generated only in Terragrunt cache, stable local state path
   root.hcl                      shared Terragrunt source, inputs, local state generation
   settings.py                   validated local inputs, dummy credentials from .env.example
-  verify.py                     Phase 5 AWS API, SQL, IAM, and scaffold verification
+  verify.py                     Phase 5 historical scaffold verification
+  package.py                    locked Linux ARM64 application image builder
+  Dockerfile                    credential-free Lambda image, explicit build context
+  application.py                upload public sources, run workflow and API verification
   modules/platform/
     main.tf                     provider, versions, and sole resource-name locals
     variables.tf                validated module inputs, ephemeral dummy DB password
     storage.tf                  raw/intermediate buckets and versioning
     database.tf                 Docker-backed pgvector RDS instance
-    compute.tf                  four placeholder Lambdas, logs, scoped roles/policies
+    compute.tf                  four image Lambdas, logs, scoped roles/policies
     workflow.tf                 artifact-reference Step Functions definition and role
     api.tf                      REST query API, Lambda integration and invoke permission
     outputs.tf                  names, ARNs, database endpoint, and local API URL
-    scaffold_handler.py         explicit Phase 6 not-implemented responses
+    scaffold_handler.py         historical Phase 5 placeholder, retained for its contract tests
   environments/dev/
     terragrunt.hcl              dev inputs using the shared root
     .terraform.lock.hcl         committed provider lock
@@ -91,9 +96,10 @@ docs/
   phase-3-results.md             measured safety fixtures, misses, and limitations
   phase-4-results.md             evaluation evidence, reproduction, and limitations
   phase-5-results.md             resource/API verification and measured emulator limits
+  phase-6-results.md             live application workflow/API evidence and limits
 ```
 
-Phases 0 through 5 are complete; files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phases 0 through 6 are complete; files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -165,7 +171,7 @@ The Bedrock embedding adapter implements Titan Text Embeddings v2 through boto3 
 
 Direct Terraform equivalents, from infra/spikes: terraform init; terraform validate; terraform plan -out=phase0.tfplan; terraform apply phase0.tfplan; terraform output -json. Use one tool's workflow at a time. State is local in infra/spikes, ignored, never stored on real AWS. The spike wrapper explicitly selects Terraform rather than Terragrunt's possible OpenTofu default.
 
-Terragrunt reads only endpoint and region from config.py using the root .env; it does not export secrets. Direct Terraform plan/apply require `-var='endpoint=<local endpoint>' -var='region=<configured region>'` from that configuration. The probe injects generated DATABASE_HOST and DATABASE_PORT into its Lambda environment; these are runtime outputs, not user configuration. The other database fields come from .env and are local-only credentials. Probe state, results JSON, and ZIP packages stay in ignored data/spikes.
+Terragrunt reads endpoint and region from config.py using the root .env; it does not export private secrets. Phase 6 also reads the safe generated image URI. Direct Terraform plan/apply require `-var='endpoint=<local endpoint>' -var='region=<configured region>'` from that configuration. The probe injects generated DATABASE_HOST and DATABASE_PORT into its Lambda environment; these are runtime outputs, not user configuration. The other database fields come from .env and are local-only credentials. Probe state, results JSON, and ZIP packages stay in ignored data/spikes.
 
 Phase 1 commands: `uv run compliancelens ingest --download-only` records/downloads approved public documents without provider calls; `uv run compliancelens ingest --prepare-only` parses/chunks/redacts without vector writes or provider calls; `uv run compliancelens ingest` writes vectors and reuses unchanged hashes; `uv run compliancelens ingest --refresh` re-downloads before ingestion. `uv run pytest tests/test_store.py --db-integration` runs real PostgreSQL tests in temporary schemas; ordinary pytest skips them.
 
@@ -213,11 +219,25 @@ Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtu
 
 ## Phase 5 infrastructure conventions
 
+Names, state ownership, and endpoint rules remain active. Empty-table and scaffold checks below describe the historical Phase 5 snapshot; Phase 6 conventions own the current application runtime.
+
 - infra/modules/platform/main.tf locals own all names: prefix compliancelens-{environment}; buckets {prefix}-raw and {prefix}-intermediate; database {prefix}-db; functions {prefix}-{parse,chunk,embed,query}; per-function roles {function}-role and policies {function}-access; workflow {prefix}-ingestion, role {prefix}-ingestion-role, policy {prefix}-ingestion-invoke; REST API {prefix}-api; verification-only role {prefix}-authorization-role and policy {prefix}-authorization-access, reusing the parse policy with account-root trust. Lambda logs derive /aws/lambda/{function}. API route is POST /query, stage equals environment. Terraform outputs own generated IDs, ARNs, database endpoints, and local invocation URLs.
 - One reusable platform module is shared by dev and prod-style environments. Both run on Floci. Shared root.hcl owns source selection, settings extraction, and generated local backend.tf; state stays in each environment directory, outside Terragrunt caches. Dev uses seven-day logs and one reserved Lambda execution; prod-style uses thirty-day logs and two. These are configuration choices, not claims of AWS production readiness.
 - infra/settings.py reads endpoint/region through config.py and obtains dummy SQL credentials explicitly from .env.example, with process overrides disabled for those example values. No Azure credentials enter infrastructure inputs, bundles, outputs, or state. The dummy database password is an ephemeral Terraform input passed only to password_wo, requiring Terraform >=1.11; inspect plan/state to verify it is absent. This dummy-only input is compatible with the existing prohibition on private secrets in Terraform variables.
-- New RDS instances isolate environments; the indexed CLI database remains the Phase 0 instance until Phase 6 migration is implemented. store.py remains the only implementation of configured-dimension pgvector tables and identities. Verification initializes the registered vector table in each empty database, uses synthetic vectors only in temporary schemas named phase5_{uuid}, using temporary table phase5_vectors and its store.py-derived identity/index names, with an explicitly synthetic model identity, and verifies HNSW. Application tables stay empty until real ingestion. No paid inference is needed in Phase 5.
-- IAM policies scope bucket objects, function logs, and workflow/API invocation to the appropriate resources. Parse reads raw and writes intermediate artifacts; chunk reads/writes intermediate; embed reads intermediate; query has logs only until Phase 6 credential/provider wiring. Stage outputs are S3 artifact references. Placeholder stages raise an explicit unimplemented error; query returns HTTP 501. Never count placeholder success as document ingestion or RAG inference.
+- New RDS instances isolate environments; the indexed CLI database remains the Phase 0 instance; Phase 6 creates a representative corpus in each application database. store.py remains the only implementation of configured-dimension pgvector tables and identities. Verification initializes the registered vector table in each empty database, uses synthetic vectors only in temporary schemas named phase5_{uuid}, using temporary table phase5_vectors and its store.py-derived identity/index names, with an explicitly synthetic model identity, and verifies HNSW. Application tables stay empty until real ingestion. No paid inference is needed in Phase 5.
+- IAM policies scope bucket objects, function logs, and workflow/API invocation to the appropriate resources. Parse reads raw and writes intermediate artifacts; chunk reads/writes intermediate; embed reads/writes run artifacts; query writes only its journal-key pattern. Stage outputs resolve to S3 artifact references. Phase 5 placeholders raised explicit unimplemented errors and returned HTTP 501; Phase 6 handlers replace those behaviors. Never count placeholder success as document ingestion or RAG inference.
 - infra/verify.py reads outputs through Terragrunt, verifies both environments, and writes ignored UUID journals under data/runs. It uses only dummy local AWS credentials and rejects nonlocal endpoints. IAM policy documents are inspected; FLOCI_SERVICES_IAM_ENFORCEMENT_ENABLED is registered once in .env.example and consumed by Compose. Enable it for actual assumed-role allow/deny probes; admin test credentials deliberately bypass enforcement. The verifier first checks that root cannot assume the Lambda-only role, then uses the verification role to test own-bucket reads and cross-environment denial. Record simulation and runtime checks separately, without claiming every AWS authorization path is faithful.
 - Generated backend.tf, scaffold ZIPs, plan files, provider caches, and state stay in tool-standard ignored paths. Phase 5 adds only the Compose-owned FLOCI_SERVICES_IAM_ENFORCEMENT_ENABLED flag, set true in the example and local setup. Never publish raw Terraform state or credentials.
-- Setup/run: `docker compose up -d --wait`; from each infra/environments/{dev,prod}, run `terragrunt init`, `terragrunt validate`, `terragrunt plan -out=phase5.tfplan`, `terragrunt apply phase5.tfplan`, and `terragrunt plan -detailed-exitcode`. From root, run `terraform fmt -check -recursive infra`, `terragrunt hcl fmt --check --working-dir infra`, `uv run python infra/verify.py`, `uv run pytest --db-integration`, and `uv run pre-commit run --all-files`. Direct Terraform equivalents operate in the Terragrunt-downloaded platform directory with the same validated inputs and generated backend; use Terragrunt as the canonical workflow.
+- Historical Phase 5 commands (use the Phase 6 commands below on the current branch): `docker compose up -d --wait`; from each infra/environments/{dev,prod}, run `terragrunt init`, `terragrunt validate`, `terragrunt plan -out=phase5.tfplan`, `terragrunt apply phase5.tfplan`, and `terragrunt plan -detailed-exitcode`. From root, run `terraform fmt -check -recursive infra`, `terragrunt hcl fmt --check --working-dir infra`, `uv run python infra/verify.py`, `uv run pytest --db-integration`, and `uv run pre-commit run --all-files`. Direct Terraform equivalents operate in the Terragrunt-downloaded platform directory with the same validated inputs and generated backend; use Terragrunt as the canonical workflow.
+
+## Phase 6 application conventions
+
+- handlers.py owns parse_handler, chunk_handler, embed_handler, and query_handler. Existing documents.py, ingestion.py, store.py, privacy.py, and rag.py remain the single implementations of application logic. Shared embedding persistence lives in ingestion.py.
+- Lambda runtime reads the existing ignored .env at /run/compliancelens/.env through a read-only Docker bind mount. Register FLOCI_SERVICES_LAMBDA_DOCKER_FLAGS once in .env.example; Compose consumes it. No credentials enter API configuration, Terraform state, archives, or S3. Runtime overrides AWS_ENDPOINT_URL to http://floci:4566 and DATABASE_HOST to floci, with the environment-specific proxy port. Settings own RAW_BUCKET and INTERMEDIATE_BUCKET, populated from Terraform outputs at runtime, not user-controlled events. These env vars are defined once in .env.example.
+- infra/package.py exports locked runtime requirements, installs dependencies in the Linux ARM64 Python 3.12 runtime, and builds an application image. dist/ owns generated requirements.txt, dependencies.sha256, python/, application/, lambda.zip (code fingerprint only), and image.json (safe image URI/digest). Only registered source, bundled public manifest, and dependencies enter the explicit Dockerfile context; .env is outside it. main.tf owns image_repository = compliancelens-application; package.py reads that literal registry entry before tagging with a content digest. settings.py reads generated image.json and passes only image_uri to Terraform. Image-based functions use per-stage command overrides, Python 3.12 ARM64. No registry push is required on Floci. The attempted dependency layer exceeded the AWS ZIP size budget; images avoid that limit. Dockerfile owns the base runtime image. `--application-only` reuses dependencies only when their recorded requirements hash matches. x86_64 requires an explicit packaging/design update.
+- Trusted raw keys are documents/{document_id}/{sha256}.{format}. Parsed/chunk artifacts are runs/{run_id}/{document_id}/{parsed,chunks}.json; ingestion reports are runs/{run_id}/{document_id}/usage.json; query journals are runs/{run_id}/query/report.json. handlers.py owns these derived keys. Events carry only registered document_id and a UUID hex run_id. All stages load bundled public provenance and verify raw hashes; no arbitrary upload, bucket, key, URL, model or SQL input is accepted. Intermediate artifacts stay local on Floci.
+- Ingestion persists one document transactionally, never deletes other manifest documents. Hash reuse and provider identity checks share the CLI implementation. Refuse over-budget batches before provider requests. No Step Functions retries for paid embedding; failed runs require explicit review/restart. Usage is recorded on success and failure, with unknown usage tracked.
+- POST /query accepts only a JSON object with a nonempty bounded question string; reject extra fields, non-JSON content, malformed/base64/oversized bodies, and other methods before provider calls. Responses never echo raw inputs or exception bodies. Runtime errors return safe structured codes; index identity mismatch returns a fresh-table/re-ingestion instruction. Query safety and token caps remain enforced by rag.py.
+- Commands: `uv run python infra/package.py`; `docker compose up -d --wait`; initialize/validate each environment with `terragrunt init` and `terragrunt validate`; apply both environments with `terragrunt plan -out=phase6.tfplan` and `terragrunt apply phase6.tfplan`; `uv run python infra/application.py --environment dev --document-id <manifest-id>` uploads one verified public document and executes ingestion; use pipeda-accountability with `--verify-api` for its bounded live Azure query checks. Repeat ingestion proves zero embedding requests. Verify prod-style with a separate run. `uv run pytest --db-integration`, registered formatting, validation, repeat plans and secret checks remain required. infra/verify.py preserves historical Phase 5 scaffold assertions and is not the Phase 6 verifier.
+
+- Phase 6 retains the complete CLI corpus and verifies one public document in each application database. Fixed-name image-function replacements and API deployment use destroy-before-create to avoid inherited name collisions; expect local downtime during replacement. The Docker base tag remains mutable; record the actual image ID in ignored image.json. Monitoring is reserved for Phase 7.

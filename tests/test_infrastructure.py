@@ -24,8 +24,10 @@ def test_provisioning_never_exports_azure_keys_or_real_database_password(
 ) -> None:
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "private-key")
     monkeypatch.setenv("DATABASE_PASSWORD", "private-database-password")
+    monkeypatch.setattr(provisioning, "image_uri", lambda root: "example:local")
     values = provisioning.terraform_inputs(ROOT)
     assert set(values) == {
+        "image_uri",
         "endpoint",
         "region",
         "database_user",

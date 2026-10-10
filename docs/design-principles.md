@@ -23,6 +23,8 @@ src/compliancelens/
   privacy.py                    local Presidio redaction before provider calls
   store.py                      pgvector identity, hash reuse, and document replacement
   ingestion.py                  ingestion orchestration and usage reports
+  chat.py                       chat adapters and safe provider usage
+  rag.py                        LangChain query pipeline, evidence checks, citations
 tests/
   test_config.py                configuration validation tests
   test_spikes.py                local endpoint safety and spike checks
@@ -32,6 +34,8 @@ tests/
   test_privacy.py                initial local redaction examples
   test_store.py                  PostgreSQL tests using isolated temporary schemas
   test_ingestion.py              orchestration and failed-run reporting
+  test_chat.py                   chat contracts, caps, redaction, and incomplete output
+  test_rag.py                    retrieval, abstention, citations, and query journals
 infra/
   spikes/
     main.tf                     Phase 0 AWS provider and bucket
@@ -48,7 +52,7 @@ data/
   raw/                          ignored downloaded documents
   floci/                        ignored emulator data
   spikes/                       ignored Lambda packages and probe state
-  runs/                         ignored ingestion usage journals
+  runs/                         ignored ingestion and query usage journals
 eval/
   questions.json                Phase 4 document-grounded questions
   results/                      Phase 4 publishable measured reports
@@ -59,9 +63,10 @@ docs/
   design-principles.md           this registry and conventions
   phase-0-results.md             commands, measured spike results, prerequisites
   phase-1-results.md             measured corpus, ingestion, usage, and re-run evidence
+  phase-2-results.md             measured RAG answers, refusals, usage, and limits
 ```
 
-Phase 0 is complete; Phase 1 files above are now registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phases 0 and 1 are complete; Phase 2 files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -77,6 +82,8 @@ Phase 0 is complete; Phase 1 files above are now registered. Future files must b
 - Phase 1 uses VECTOR_TABLE, initially regulatory_chunks_azure. Its companion identity table is {VECTOR_TABLE}_identity; the index is {VECTOR_TABLE}_embedding_hnsw. store.py owns those derived names. Identity columns: backend, model, dimension, fingerprint, provider_model. Chunk columns: id, document_id, content_hash, text, regulator, document_title, section_heading, page, anchor, source_url, retrieved_at, embedding_backend, embedding_model, embedding_dimension, embedding. Backend, model, and dimension are immutable per table. Fingerprints also include endpoint, API version, embedding prompt policy, and redaction policy. Querying a mismatched index refuses with separate-table/fresh-table instructions. Provider-reported model identity is checked for drift.
 - New Phase 1 settings are registered once in .env.example: DATABASE_HOST, DATABASE_PORT, VECTOR_TABLE, CHUNK_SIZE_BYTES, CHUNK_OVERLAP_BYTES, PII_SPACY_MODEL, and INGEST_MAX_EMBEDDING_BATCHES. Database host/port refer to the existing Floci RDS endpoint. No new database resource is needed. Tables use regulatory_chunks_{backend}, with a model-specific suffix when using multiple models of one backend.
 - Source choices and URLs live only in data/manifest.json. Document IDs use regulator-purpose slugs. Downloads stay in ignored data/raw, usage reports in ignored data/runs with UUID run names. Publish aggregated evidence in docs/phase-1-results.md.
+- Phase 2 settings are RETRIEVAL_TOP_K (initial 6), RETRIEVAL_MIN_SIMILARITY (initial 0.30), and QUERY_MAX_BYTES (initial 2000), registered once in .env.example. These bound context, gate weak retrieval, and bound question size; similarity is a heuristic, not a confidence probability. Chat uses the existing LLM_MAX_OUTPUT_TOKENS cap.
+- Phase 2 uses LangChain Documents, ChatPromptTemplate, and RunnableLambda to connect retrieval and generation. Queries only use manifest-listed public sources from a matching index. Ollama query embeddings use the search-query prefix while retaining the existing document-vector identity. Chat returns supported/claims JSON with numbered source references; rag.py validates references and builds citation metadata and URLs from stored provenance, never model-generated URLs. Unsupported, invalid, filtered, or truncated output is withheld. Logs record redacted outputs and prompt/question hashes, never raw questions or provider error bodies.
 - Shared logic has one implementation. Tests may use fixtures but must not copy production logic.
 
 ## Commands
@@ -122,7 +129,7 @@ docker compose down
 
 The Homebrew/Colima commands are Mac prerequisites, run once if missing. Skip the plugin symlink if it already exists or Docker Desktop already supplies Compose. Colima is a free local Docker runtime; its VM and containers remain running until stopped. Use `colima stop` after stopping Compose if you want to release the VM's resources. This session installed these tools because they were missing.
 
-On the Windows PC, install Ollama and run `ollama pull qwen3:8b` and `ollama pull embeddinggemma:300m`. For an offline local setup, change LLM_BACKEND and EMBEDDING_BACKEND to ollama in the Mac's .env, set OLLAMA_BASE_URL to the PC's reachable LAN URL, set EMBEDDING_DIMENSION to 768, and set VECTOR_TABLE to regulatory_chunks_ollama. Confirm the returned dimension on the first run. Configure the server's LAN listener and firewall before remote use. Mac Azure setup uses the .env.example selections and fills the endpoint, key, and chat deployment only in .env. Azure embeddings are live-tested; chat inference is not implemented until Phase 2. The Ollama embedding adapter is mock-tested only so far. Full remote-server instructions and live model verification belong to later phases.
+On the Windows PC, install Ollama and run `ollama pull qwen3:8b` and `ollama pull embeddinggemma:300m`. For an offline local setup, change LLM_BACKEND and EMBEDDING_BACKEND to ollama in the Mac's .env, set OLLAMA_BASE_URL to the PC's reachable LAN URL, set EMBEDDING_DIMENSION to 768, and set VECTOR_TABLE to regulatory_chunks_ollama. Confirm the returned dimension on the first run. Configure the server's LAN listener and firewall before remote use. Mac Azure setup uses the .env.example selections and fills the endpoint, key, and chat deployment only in .env. Azure embeddings and chat are live-tested. The Ollama embedding and chat adapters are mock-tested only so far. Full remote-server instructions and live model verification belong to later phases.
 
 The Bedrock embedding adapter implements Titan Text Embeddings v2 through boto3 InvokeModel. Set EMBEDDING_DIMENSION to 256, 512, or 1024 and use a separate VECTOR_TABLE such as regulatory_chunks_bedrock. The configured model ID lives in .env.example. This adapter is tested with boto3 Stubber, not real Bedrock. Floci's dummy responses cannot provide usable regulatory embeddings.
 
@@ -134,7 +141,7 @@ Phase 1 commands: `uv run compliancelens ingest --download-only` records/downloa
 
 Presidio uses the pinned en_core_web_sm 3.8.0 official release wheel as a Python dependency. uv sync installs it; no runtime model downloads. Downloads validate official HTTPS hosts and redirects, consult robots.txt, limit size, and pause between requests. Retrieval timestamps are recorded in UTC.
 
-Ask and eval remain planned: `uv run compliancelens ask "question"` and `uv run compliancelens eval`. They are unavailable until their phases.
+Phase 2 command: `uv run compliancelens ask "question"` returns an answer/refusal, trusted citations, provider identity, and token usage as JSON, and writes a query UUID journal in ignored data/runs. `uv run pytest --db-integration` includes real retrieval tests. Evaluation remains planned: `uv run compliancelens eval`, unavailable until Phase 4.
 
 ## Code style
 

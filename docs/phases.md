@@ -49,24 +49,24 @@ Deviations: chunking uses a conservative UTF-8 byte budget rather than a provide
 
 ## Phase 2: Local RAG core
 
-Status: not started.
+Status: done.
 
 Goal: grounded answers with traceable citations and evidence-based abstention.
 
 Deliverables: LangChain retrieval/generation pipeline, small backend interface, AzureOpenAI chat, Ollama chat, boto3 Bedrock Converse, output cap, and CLI.
 
-- [ ] Implement all three chat adapters and mock-test their request/response contracts.
-- [ ] Verify GPT-5 parameter omissions and max_completion_tokens.
-- [ ] Redact PII before Azure requests and preserve separate system/user messages.
-- [ ] Retrieve only from a matching embedding identity.
-- [ ] Cite regulator, document, and section with source URL/page/anchor.
-- [ ] Refuse weak-evidence questions; test unsupported and out-of-scope cases.
-- [ ] Record per-run chat token usage and incomplete-output behavior.
-- [ ] Run actual local questions and state which provider was exercised.
+- [x] Implement all three chat adapters and mock-test their request/response contracts.
+- [x] Verify GPT-5 parameter omissions and max_completion_tokens.
+- [x] Redact PII before Azure requests and preserve separate system/user messages.
+- [x] Retrieve only from a matching embedding identity.
+- [x] Cite regulator, document, and section with source URL/page/anchor.
+- [x] Refuse weak-evidence questions; test unsupported and out-of-scope cases.
+- [x] Record per-run chat token usage and incomplete-output behavior.
+- [x] Run actual local questions and state which provider was exercised.
 
-Run/test: planned `uv run compliancelens ask "question"`; pytest backend/retrieval/citation tests and real selected-provider requests. Bedrock remains mock-tested only.
+Run/test: `uv run compliancelens ask "question"` and `uv run pytest --db-integration`. Seven live Azure queries covered supported answers, an unsupported requirement, an unrelated request, truncation, and a citation prompt refinement; an additional identity mismatch made zero provider requests. All 95 tests, including 13 real PostgreSQL tests, passed. See phase-2-results.md for usage, reproduction, and limits. Bedrock remains mock-tested only.
 
-Deviations: none.
+Deviations: generation uses a small direct SDK adapter within a LangChain pipeline rather than provider-specific LangChain wrappers, preserving the exact Azure request pattern and explicit usage. Structural citation validation is implemented; semantic citation quality is not claimed and remains Phase 4 measurement. Local redaction was extended to chat before Phase 3 as required.
 
 ## Phase 3: Safety
 

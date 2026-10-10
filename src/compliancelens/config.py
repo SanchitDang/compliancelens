@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     chunk_overlap_bytes: int = Field(default=200, ge=0)
     pii_spacy_model: str = ""
     ingest_max_embedding_batches: int = Field(default=40, ge=1, le=1000)
+    retrieval_top_k: int = Field(default=6, ge=1, le=20)
+    retrieval_min_similarity: float = Field(default=0.30, ge=0, le=1, allow_inf_nan=False)
+    query_max_bytes: int = Field(default=2000, ge=100, le=8000)
 
     _local_aws_endpoint = field_validator("aws_endpoint_url")(require_local_endpoint)
 

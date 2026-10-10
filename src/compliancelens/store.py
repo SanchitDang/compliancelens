@@ -1,7 +1,9 @@
+import math
 from dataclasses import astuple
 from typing import Any
 
 import psycopg
+from langchain_core.documents import Document
 from psycopg import sql
 
 from compliancelens.config import Settings
@@ -43,9 +45,16 @@ class VectorStore:
         self.identity = identity
 
     def assert_identity(self) -> None:
-        row = self.connection.execute(
-            sql.SQL("SELECT backend, model, dimension, fingerprint FROM {}").format(self.metadata)
-        ).fetchone()
+        try:
+            row = self.connection.execute(
+                sql.SQL("SELECT backend, model, dimension, fingerprint FROM {}").format(
+                    self.metadata
+                )
+            ).fetchone()
+        except psycopg.errors.UndefinedTable as error:
+            raise IdentityMismatch(
+                "No ingested index identity exists. Re-ingest into a fresh VECTOR_TABLE."
+            ) from error
         if row != astuple(self.identity):
             raise IdentityMismatch(
                 "Embedding identity differs from this index. Set VECTOR_TABLE to a separate table "
@@ -175,3 +184,42 @@ class VectorStore:
         return self.connection.execute(
             sql.SQL("SELECT count(*) FROM {}").format(self.table)
         ).fetchone()[0]
+
+    def search(self, vector: list[float], document_ids: list[str], limit: int) -> list[Document]:
+        self.assert_identity()
+        if (
+            len(vector) != self.identity.dimension
+            or any(not math.isfinite(value) for value in vector)
+            or not any(vector)
+            or not document_ids
+            or not 1 <= limit <= 20
+        ):
+            raise ValueError("Retrieval requires a valid vector, public document IDs, and limit")
+        encoded = "[" + ",".join(str(value) for value in vector) + "]"
+        rows = self.connection.execute(
+            sql.SQL(
+                "SELECT id, document_id, text, regulator, document_title, section_heading, "
+                "page, anchor, source_url, retrieved_at, 1 - (embedding <=> %s::vector) "
+                "FROM {} WHERE document_id = ANY(%s) "
+                "ORDER BY embedding <=> %s::vector LIMIT %s"
+            ).format(self.table),
+            (encoded, document_ids, encoded, limit),
+        ).fetchall()
+        names = (
+            "chunk_id",
+            "document_id",
+            "regulator",
+            "document_title",
+            "section_heading",
+            "page",
+            "anchor",
+            "source_url",
+            "retrieved_at",
+            "similarity",
+        )
+        return [
+            Document(
+                page_content=row[2], metadata=dict(zip(names, (*row[:2], *row[3:]), strict=True))
+            )
+            for row in rows
+        ]

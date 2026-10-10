@@ -16,30 +16,39 @@ def main() -> None:
     mode.add_argument("--download-only", action="store_true")
     mode.add_argument("--prepare-only", action="store_true")
     ingestion.add_argument("--refresh", action="store_true")
+    query = commands.add_parser("ask")
+    query.add_argument("question")
     arguments = parser.parse_args()
     try:
         settings = Settings()
     except ValidationError as error:
         parser.exit(2, f"Invalid configuration: {error}\n")
-    if arguments.command == "ingest":
-        from compliancelens.ingestion import ingest
+    if arguments.command in {"ask", "ingest"}:
         from compliancelens.store import IdentityMismatch
 
         try:
-            report = ingest(
-                settings,
-                Path.cwd(),
-                arguments.download_only,
-                arguments.prepare_only,
-                arguments.refresh,
-            )
+            if arguments.command == "ask":
+                from compliancelens.rag import ask
+
+                report = ask(settings, Path.cwd(), arguments.question)
+            else:
+                from compliancelens.ingestion import ingest
+
+                report = ingest(
+                    settings,
+                    Path.cwd(),
+                    arguments.download_only,
+                    arguments.prepare_only,
+                    arguments.refresh,
+                )
         except Exception as error:
             detail = str(error) if isinstance(error, IdentityMismatch) else type(error).__name__
-            parser.exit(1, f"Ingestion failed: {detail}. See data/runs for safe usage records.\n")
-        print(json.dumps(report, indent=2))
+            operation = "Query" if arguments.command == "ask" else "Ingestion"
+            parser.exit(1, f"{operation} failed: {detail}. See data/runs for safe usage records.\n")
+        print(json.dumps(report, indent=2, default=str))
         return
     print(
-        f"Scaffold configuration valid: chat={settings.llm_backend}, "
+        f"Configuration valid: chat={settings.llm_backend}, "
         f"embeddings={settings.embedding_backend}, dimension={settings.embedding_dimension}"
     )
     print("Provider credentials/connectivity, ingestion, and inference are not tested here.")

@@ -114,3 +114,38 @@ def test_failed_document_write_rolls_back_previous_rows(store: VectorStore) -> N
         )
     assert store.row_count() == 1
     assert store.cached_vectors(["hash"]) == {"hash": "[1,0]"}
+
+
+def test_retrieval_orders_by_cosine_and_preserves_citation_metadata(store: VectorStore) -> None:
+    store.replace_document(
+        "doc",
+        [chunk("nearest"), chunk("other", "other")],
+        {"hash": [1.0, 0.0], "other": [0.0, 1.0]},
+    )
+    results = store.search([1.0, 0.0], ["doc"], 2)
+    assert [item.metadata["chunk_id"] for item in results] == ["nearest", "other"]
+    assert results[0].metadata["similarity"] == pytest.approx(1.0)
+    assert results[1].metadata["similarity"] == pytest.approx(0.0)
+    assert results[0].metadata["section_heading"] == "Governance"
+    assert results[0].page_content == "Public text"
+
+
+def test_retrieval_excludes_documents_outside_manifest(store: VectorStore) -> None:
+    store.replace_document("doc", [chunk("public")], {"hash": [0.5, 0.5]})
+    private = replace(chunk("private", "private"), document_id="private")
+    store.replace_document("private", [private], {"private": [1.0, 0.0]})
+    assert [item.metadata["chunk_id"] for item in store.search([1.0, 0.0], ["doc"], 2)] == [
+        "public"
+    ]
+
+
+def test_retrieval_refuses_different_embedding_identity(store: VectorStore) -> None:
+    other = VectorStore(store.connection, "test_chunks", replace(store.identity, model="changed"))
+    with pytest.raises(IdentityMismatch, match="separate table"):
+        other.search([1.0, 0.0], ["doc"], 2)
+
+
+def test_missing_index_identity_explains_reingestion(store: VectorStore) -> None:
+    missing = VectorStore(store.connection, "missing_chunks", store.identity)
+    with pytest.raises(IdentityMismatch, match="Re-ingest"):
+        missing.search([1.0, 0.0], ["doc"], 2)

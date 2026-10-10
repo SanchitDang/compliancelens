@@ -80,3 +80,18 @@ def test_example_has_unique_variables_and_mac_defaults() -> None:
     values = dict(pairs)
     assert values["LLM_BACKEND"] == values["EMBEDDING_BACKEND"] == "azure"
     assert values["AZURE_OPENAI_API_KEY"] == ""
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("retrieval_top_k", 0),
+        ("retrieval_top_k", 21),
+        ("retrieval_min_similarity", float("nan")),
+        ("retrieval_min_similarity", 1.1),
+        ("query_max_bytes", 99),
+    ],
+)
+def test_query_limits_rejected(values: dict[str, object], field: str, value: object) -> None:
+    with pytest.raises(ValidationError):
+        Settings(**values, **{field: value})

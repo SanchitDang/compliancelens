@@ -11,6 +11,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="compliancelens")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("config-check")
+    commands.add_parser("safety-check")
     ingestion = commands.add_parser("ingest")
     mode = ingestion.add_mutually_exclusive_group()
     mode.add_argument("--download-only", action="store_true")
@@ -23,6 +24,12 @@ def main() -> None:
         settings = Settings()
     except ValidationError as error:
         parser.exit(2, f"Invalid configuration: {error}\n")
+    if arguments.command == "safety-check":
+        from compliancelens.privacy import Redactor
+        from compliancelens.safety import assess_safety
+
+        print(json.dumps(assess_safety(Path.cwd(), Redactor(settings.pii_spacy_model)), indent=2))
+        return
     if arguments.command in {"ask", "ingest"}:
         from compliancelens.store import IdentityMismatch
 

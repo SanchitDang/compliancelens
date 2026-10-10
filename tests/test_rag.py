@@ -69,7 +69,7 @@ def test_answer_builds_citations_from_provenance(redactor: Redactor) -> None:
             }
         ),
     )
-    result = pipeline.chain.invoke("How should information be protected?")
+    result = pipeline.run("How should information be protected?")
     assert result["status"] == "answered"
     assert result["answer"] == "Use appropriate safeguards. [1]"
     assert result["citations"][0]["url"] == "https://www.priv.gc.ca/en/test#safeguards"
@@ -93,24 +93,24 @@ def test_answer_builds_citations_from_provenance(redactor: Redactor) -> None:
     ],
 )
 def test_invalid_output_is_withheld(redactor: Redactor, text: str) -> None:
-    result = engine(redactor, text).chain.invoke("Question")
+    result = engine(redactor, text).run("Question")
     assert result["status"] == "refused"
     assert result["claims"] == result["citations"] == []
 
 
 def test_weak_evidence_skips_chat(redactor: Redactor) -> None:
     pipeline = engine(redactor, "unused", [document(0.1)])
-    assert pipeline.chain.invoke("Out of scope question")["reason"] == "weak_evidence"
+    assert pipeline.run("Out of scope question")["reason"] == "weak_evidence"
     pipeline.chat.generate.assert_not_called()
 
 
 def test_model_abstention_for_unsupported_question(redactor: Redactor) -> None:
-    result = engine(redactor, '{"supported":false,"claims":[]}').chain.invoke("Unsupported")
+    result = engine(redactor, '{"supported":false,"claims":[]}').run("Unsupported")
     assert result["reason"] == "unsupported_by_context"
 
 
 def test_incomplete_response_is_withheld(redactor: Redactor) -> None:
-    result = engine(redactor, '{"supported":true', complete=False).chain.invoke("Question")
+    result = engine(redactor, '{"supported":true', complete=False).run("Question")
     assert result["reason"] == "incomplete_or_filtered_output"
     assert result["finish_reason"] == "length"
 
@@ -119,7 +119,7 @@ def test_identity_mismatch_blocks_paid_embedding_and_chat(redactor: Redactor) ->
     pipeline = engine(redactor, "unused")
     pipeline.store.assert_identity.side_effect = IdentityMismatch("separate table")
     with pytest.raises(IdentityMismatch):
-        pipeline.chain.invoke("Question")
+        pipeline.run("Question")
     pipeline.embedder.embed_query.assert_not_called()
     pipeline.chat.generate.assert_not_called()
 
@@ -129,7 +129,7 @@ def test_nonpublic_provenance_blocks_chat(redactor: Redactor) -> None:
     private.metadata["source_url"] = "https://private.example/document"
     pipeline = engine(redactor, "unused", [private])
     with pytest.raises(ValueError, match="public manifest"):
-        pipeline.chain.invoke("Question")
+        pipeline.run("Question")
     pipeline.chat.generate.assert_not_called()
 
 
@@ -164,14 +164,14 @@ def test_query_failure_journal_redacts_question_and_omits_error_body(
     connection = Mock()
     monkeypatch.setattr(rag, "connect", lambda *args: connection)
     pipeline = Mock()
-    pipeline.chain.invoke.side_effect = TimeoutError("jane@example.com echoed in error")
+    pipeline.run.side_effect = TimeoutError("jane@example.com echoed in error")
     monkeypatch.setattr(rag, "QueryEngine", lambda *args: pipeline)
     with pytest.raises(TimeoutError):
         ask(settings, tmp_path, "Question from jane@example.com")
     report_text = next((tmp_path / "data" / "runs").glob("*.json")).read_text()
     report = json.loads(report_text)
     assert "jane@example.com" not in report_text
-    assert "jane@example.com" not in pipeline.chain.invoke.call_args.args[0]
+    assert "jane@example.com" not in pipeline.run.call_args.args[0]
     assert report["embedding_usage"]["input_tokens"] == 9
     assert not report["chat_usage"]["token_usage_complete"]
     assert report["chat_usage"]["requests_without_reported_usage"] == 1

@@ -11,6 +11,7 @@ from uuid import uuid4
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
+from langsmith import tracing_context
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from compliancelens.chat import ChatBackend
@@ -18,6 +19,7 @@ from compliancelens.config import Settings
 from compliancelens.documents import Source, load_manifest
 from compliancelens.embeddings import Embedder
 from compliancelens.privacy import Redactor
+from compliancelens.safety import GUARD_POLICY, injection_detected, output_violation
 from compliancelens.store import VectorStore, connect
 
 SYSTEM_PROMPT = """Answer questions about the supplied public Canadian regulatory excerpts only.
@@ -94,7 +96,13 @@ class QueryEngine:
         self.embedder, self.store, self.chat = embedder, store, chat
         self.sources = {source.document_id: source for source in sources}
         self.retrieved: list[Document] = []
-        self.chain = RunnableLambda(self.retrieve) | RunnableLambda(self.answer)
+        self._chain = RunnableLambda(self.retrieve) | RunnableLambda(self.answer)
+
+    def run(self, question: str) -> dict[str, Any]:
+        with tracing_context(enabled=False):
+            if injection_detected(question):
+                return self.refuse("input_injection")
+            return self._chain.invoke(self.redactor.redact_query(question).text)
 
     def retrieve(self, question: str) -> dict[str, Any]:
         self.store.assert_identity()
@@ -125,12 +133,23 @@ class QueryEngine:
         documents = context["documents"]
         if not documents:
             return self.refuse("weak_evidence")
+        if any(
+            injection_detected(
+                document.page_content
+                + "\n"
+                + document.metadata["section_heading"]
+                + "\n"
+                + document.metadata["document_title"]
+            )
+            for document in documents
+        ):
+            return self.refuse("context_injection")
         excerpts = [
             {
                 "number": index,
-                "title": document.metadata["document_title"],
-                "section": document.metadata["section_heading"],
-                "text": document.page_content,
+                "title": self.redactor.redact_query(document.metadata["document_title"]).text,
+                "section": self.redactor.redact_query(document.metadata["section_heading"]).text,
+                "text": self.redactor.redact_query(document.page_content).text,
             }
             for index, document in enumerate(documents, 1)
         ]
@@ -152,13 +171,20 @@ class QueryEngine:
             )
         if not output.claims or any(
             not claim.text.strip()
-            or re.search(r"https?://|www\.|\[\d+\]", claim.text)
+            or re.search(r"https?://|www\.|\[\d+\]", claim.text, re.IGNORECASE)
             or any(number < 1 or number > len(documents) for number in claim.sources)
             for claim in output.claims
         ):
             return self.refuse("invalid_citations")
+        for claim in output.claims:
+            violation = output_violation(claim.text, self.redactor)
+            if violation:
+                return self.refuse(violation)
         claims = [
-            {"text": self.redactor.redact(claim.text).text, "sources": sorted(set(claim.sources))}
+            {
+                "text": self.redactor.redact_query(claim.text).text,
+                "sources": sorted(set(claim.sources)),
+            }
             for claim in output.claims
         ]
         referenced = sorted({number for claim in claims for number in claim["sources"]})
@@ -170,17 +196,26 @@ class QueryEngine:
                 for claim in claims
             ),
             "claims": claims,
-            "citations": [citation(documents[number - 1], number) for number in referenced],
+            "citations": [
+                self.safe_citation(documents[number - 1], number) for number in referenced
+            ],
             "finish_reason": response.finish_reason,
         }
+
+    def safe_citation(self, document: Document, number: int) -> dict[str, Any]:
+        metadata = dict(document.metadata)
+        for field in ("document_title", "section_heading"):
+            metadata[field] = self.redactor.redact_query(metadata[field]).text
+        if metadata["anchor"] and self.redactor.redact_query(metadata["anchor"]).counts:
+            metadata["anchor"] = None
+        return citation(Document(page_content="", metadata=metadata), number)
 
     @staticmethod
     def refuse(reason: str, finish_reason: str | None = None) -> dict[str, Any]:
         message = (
             "Insufficient evidence in the indexed public documents to answer."
             if reason in {"weak_evidence", "unsupported_by_context"}
-            else "No answer returned because the model response was incomplete, filtered, "
-            "or failed validation."
+            else "No answer returned because a safety or response validation check failed."
         )
         return {
             "status": "refused",
@@ -208,14 +243,19 @@ def ask(settings: Settings, root: Path, question: str) -> dict[str, Any]:
         "retrieval_min_similarity": settings.retrieval_min_similarity,
         "vector_table": settings.vector_table,
         "report_file": str(path.relative_to(root)),
+        "query_redaction_policy": Redactor.query_policy,
+        "guard_policy": GUARD_POLICY,
     }
     embedder, chat, connection = None, None, None
     try:
         if not question.strip() or len(question.encode()) > settings.query_max_bytes:
             raise ValueError("Question must be nonempty and within QUERY_MAX_BYTES")
         redactor = Redactor(settings.pii_spacy_model)
-        safe_question = redactor.redact(question).text
+        safe_question = redactor.redact_query(question).text
         report["question_hash"] = hashlib.sha256(safe_question.encode()).hexdigest()
+        if injection_detected(question):
+            report.update(QueryEngine.refuse("input_injection"))
+            return report
         _, sources = load_manifest(root / "data" / "manifest.json")
         embedder = Embedder(settings, redactor)
         chat = ChatBackend(settings, redactor)
@@ -227,7 +267,7 @@ def ask(settings: Settings, root: Path, question: str) -> dict[str, Any]:
         connection = connect(settings)
         store = VectorStore(connection, settings.vector_table, embedder.identity)
         engine = QueryEngine(settings, redactor, embedder, store, chat, sources)
-        report.update(engine.chain.invoke(safe_question))
+        report.update(engine.run(safe_question))
         report["retrieved"] = [
             {
                 "chunk_id": document.metadata["chunk_id"],

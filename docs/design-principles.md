@@ -26,6 +26,7 @@ src/compliancelens/
   chat.py                       chat adapters and safe provider usage
   rag.py                        LangChain query pipeline, evidence checks, citations
   safety.py                     local injection checks and fixture assessment
+  evaluation.py                 benchmark validation, caches, judges, metrics, run journals
 tests/
   test_config.py                configuration validation tests
   test_spikes.py                local endpoint safety and spike checks
@@ -38,6 +39,7 @@ tests/
   test_chat.py                   chat contracts, caps, redaction, and incomplete output
   test_rag.py                    retrieval, abstention, citations, and query journals
   test_safety.py                 attacks, leakage boundaries, and safety assessment
+  test_evaluation.py             cache isolation, benchmark validation, and metric failures
   fixtures/safety.json           synthetic PII, attacks, and benign controls
 infra/
   spikes/
@@ -58,7 +60,9 @@ data/
   runs/                         ignored ingestion and query usage journals
 eval/
   questions.json                Phase 4 document-grounded questions
-  results/                      Phase 4 publishable measured reports
+  results/
+    phase-4.json                aggregated measured variants and usage, no prompts
+    phase-4.md                  readable metric definitions and comparison
   cache/                        ignored cached redacted eval and judge responses
 docs/
   architecture.md               current and planned system, verified limits
@@ -68,9 +72,10 @@ docs/
   phase-1-results.md             measured corpus, ingestion, usage, and re-run evidence
   phase-2-results.md             measured RAG answers, refusals, usage, and limits
   phase-3-results.md             measured safety fixtures, misses, and limitations
+  phase-4-results.md             evaluation evidence, reproduction, and limitations
 ```
 
-Phases 0 through 2 are complete; Phase 3 files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phases 0 through 4 are complete; files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -148,7 +153,7 @@ Phase 1 commands: `uv run compliancelens ingest --download-only` records/downloa
 
 Presidio uses the pinned en_core_web_sm 3.8.0 official release wheel as a Python dependency. uv sync installs it; no runtime model downloads. Downloads validate official HTTPS hosts and redirects, consult robots.txt, limit size, and pause between requests. Retrieval timestamps are recorded in UTC.
 
-Phase 2 command: `uv run compliancelens ask "question"` returns an answer/refusal, trusted citations, provider identity, and token usage as JSON, and writes a query UUID journal in ignored data/runs. `uv run pytest --db-integration` includes real retrieval tests. Evaluation remains planned: `uv run compliancelens eval`, unavailable until Phase 4.
+Phase 2 command: `uv run compliancelens ask "question"` returns an answer/refusal, trusted citations, provider identity, and token usage as JSON, and writes a query UUID journal in ignored data/runs. `uv run pytest --db-integration` includes real retrieval tests. Evaluation uses the Phase 4 command below.
 
 Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtures with zero embedding/chat requests and writes an ignored UUID safety report to data/runs. `uv run pytest tests/test_safety.py tests/test_privacy.py` verifies local guards; the full suite uses `uv run pytest --db-integration`.
 
@@ -164,7 +169,7 @@ Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtu
 
 - Secrets live only in ignored .env. .env.example contains empty Azure key and endpoint fields. No credential copying, key printing, SDK debug logging, or secrets in Terraform variables, state, Lambda bundles, reports, or git.
 - AWS uses only dummy local credentials, explicit emulator endpoints, and no real account. Fail closed for spike endpoints outside loopback or the registered Compose host. Never mount host AWS credentials.
-- Run a pre-commit secret scan using detect-secrets and Ruff. Disable scanner network verification. Hooks are defense in depth, not a guarantee. Floci dummy credentials and rejection-fixture lines have narrow inline allowlist pragmas; exact JSON sha256 checksum lines have an exclusion pattern. No source/manifest file is excluded wholesale.
+- Run a pre-commit secret scan using detect-secrets and Ruff. Disable scanner network verification. Hooks are defense in depth, not a guarantee. Floci dummy credentials and rejection-fixture lines have narrow inline allowlist pragmas; exact JSON sha256 and chunk_id checksum lines have an exclusion pattern. No source/manifest file is excluded wholesale.
 - Azure replaces the original all-free inference requirement at the user's request. Phase 0 makes no Azure calls. Later Azure calls require PII redaction first, and context comes only from public regulatory documents. The Phase 1 Presidio boundary must remain on every embedding path; new chat/evaluation paths must redact before sending text.
 - LLM_BACKEND accepts bedrock, ollama, azure; its code default is bedrock. EMBEDDING_BACKEND accepts the same values. .env.example selects azure for both on the Mac. Windows instructions select ollama for both and set the configured dimension to the observed embedding model dimension.
 - Cap completion tokens (initial cap 2048), batch embeddings (initial batch size 16), disable hidden SDK retries for paid inference, and record input/output/embedding token usage by backend, model, and run. Token usage is not a dollar estimate without verified deployment pricing.
@@ -179,3 +184,11 @@ Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtu
 - Do not add files outside this registry without updating this document first.
 - Do not mix embedding models in a table or silently query an old index.
 - Do not report a successful spike, evaluation score, safety guarantee, or Azure/Bedrock inference without evidence.
+
+## Phase 4 evaluation conventions
+
+- evaluation.py owns the 30–40-question schema, exact gold chunk IDs/content hashes, expected facts, and judge rubric. questions.json contains only public-document questions and public-derived reference facts/excerpts. Validate gold rows and manifest provenance before any paid request. Gold labels never enter retrieval or answer generation.
+- `RETRIEVAL_TOP_K=6 uv run compliancelens eval` reproduces the measured experiment. `uv run compliancelens eval` runs baseline plus two controlled candidates: wider context (top-k increased by four, bounded at 20) and focused context (top-k halved, minimum one). `uv run compliancelens eval --variant baseline` runs one variant. `--refresh-cache` bypasses existing evaluation caches; use it after a deployment alias changes. Production retrieval settings remain unchanged. No new environment variables, resource names, or tables are introduced.
+- Chat cache keys include redacted system/user prompts, backend/deployment/API/endpoint fingerprint/output cap, corpus and question-set hashes, guard and redaction policies. Store only complete responses unchanged by local output redaction, checking both the response and every decoded JSON string field before storage or reuse. Judge data is redacted field by field before serialization, then again at the provider boundary. Incomplete or detected-sensitive outputs are withheld from the cache and may require a new request on repetition. Query-vector caches include redacted question, immutable embedding identity, and the stored provider model; validate cached dimensions and model before use. Caches live in ignored eval/cache. Reused responses retain original usage separately from new requests. Deployment aliases require explicit cache refresh after provider upgrades.
+- Each UUID evaluation journal lives in ignored data/runs. Persist after each question and on failure. Record actual provider models, per-variant usage and cache hits, run/configuration/corpus identity, per-question retrieval IDs and safe answers, and unknown usage. Publish only aggregate comparison artifacts in the registered results files. Exact provenance hashes in published JSON use the sha256 checksum key; exact 64-character chunk_id values are public content identifiers, also narrowly excluded from entropy scanning.
+- Retrieval hit rate counts supported questions retrieving at least one exact gold chunk. Answer accuracy counts fully correct, complete judge-approved answers divided by all supported questions, including failures and refusals. Citation correctness counts judge-supported claim/source pairs divided by all emitted pairs; missing or invalid judge results count zero and are separately identified. Unsupported-question refusal rate is separate. Report integer denominators and never drop errors. This is a development set with a same-model reference-guided judge, not an independent legal audit or held-out accuracy estimate.

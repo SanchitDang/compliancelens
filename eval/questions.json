@@ -1,0 +1,553 @@
+{
+  "version": 1,
+  "purpose": "Development benchmark; public-source references, not legal advice or held-out accuracy.",
+  "questions": [
+    {
+      "id": "q01",
+      "question": "Under OSFI B-10, who remains accountable for outsourced business activities and third-party data?",
+      "supported": true,
+      "facts": [
+        "The FRFI retains accountability for outsourced activities and third-party data."
+      ],
+      "gold": [
+        {
+          "chunk_id": "66468524a8ef914f431f0c069cc524464ca487a7cea5d66d23960fca7ae20e37",
+          "sha256": "b11c5dce44ceefdf5c4248034823b71a4342b88095c9f3a977da5b70d4a19955",
+          "document_id": "osfi-b10",
+          "section_heading": "1.1.1 The FRFI retains accountability for services outsourced to a third party and manages risk arising from all third-party arrangements",
+          "excerpt": "The FRFI has the flexibility to arrange its operations in a way that achieves its business and strategic objectives. However, the FRFI retains accountability for business activities, functions, and services outsourced to third parties, for data exchanged with third parties or data to which third-parties have access, and for managing risk arising from third-party arrangements.\n\nThe FRFI\u2019s Senior Management should be satisfied that business activities, functions, and services performed by third parties are done in a safe and sound manner, and in compliance with applicable legislative and regulatory requirements and the FRFI\u2019s own internal policies, standards, and processes. The FRFI\u2019s senior management should also be satisfied that third-party arrangements are in alignment with the FRFI\u2019s risk appetite and managed proportionate to the level of criticality and risk.\n\nPlease refer to OSFI\u2019s Corporate Governance Guideline for OSFI\u2019s expectations of FRFI Boards of Directors in regard to business strategy, risk appetite and operational, business, risk and crisis management policies."
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "question": "When should concentration risk be assessed under B-10, and across which three dimensions?",
+      "supported": true,
+      "facts": [
+        "Before a contract and on an ongoing basis.",
+        "Geography, supplier, and subcontractor."
+      ],
+      "gold": [
+        {
+          "chunk_id": "321fd36f1022dda82b0b5b74ea0951b82221f822f13105b821b966e76569c5be",
+          "sha256": "28c88fd5f3435a319100518b944666e4b6bc0ee159045505d8d5205be1b2e3cf",
+          "document_id": "osfi-b10",
+          "section_heading": "2.2.3.1 Concentration risk is assessed",
+          "excerpt": "To determine the appropriate level of mitigation, the FRFI should assess concentration risk both prior to entering a contract or agreement and on an ongoing basis. Processes established should take reasonable steps to assess concentration risk over multiple dimensions including geography, supplier, and subcontractor. Throughout the process, concentration should be considered within the FRFI\u2019s business functions/units and legal entities, and across the FRFI\u2019s entire organization. To the greatest extent possible, FRFIs should also assess systemic concentration risk."
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "question": "Under B-10, what should an FRFI understand about subcontractors before a third-party arrangement?",
+      "supported": true,
+      "facts": [
+        "Number and criticality of subcontractors.",
+        "Adequacy and performance of the third party risk management program.",
+        "Impact on concentration risk."
+      ],
+      "gold": [
+        {
+          "chunk_id": "1fe0ddaf30450e75db448a9cbed10b9352c07b0c4147926bc67c508c89a23421",
+          "sha256": "de914148518ad21209637fedad3579821ff406976abb0dad94e239fc898c32f7",
+          "document_id": "osfi-b10",
+          "section_heading": "2.2.4.1 Risks introduced by subcontracting practices are identified and understood",
+          "excerpt": "The FRFI should assess risks arising from third-party subcontractors that could impact the FRFI.\n\nPrior to entering a third-party arrangement the FRFI should identify and understand the third party\u2019s subcontracting practices, including:\n\nnumber and criticality of subcontractors;\n\nthe adequacy and performance of the third party\u2019s own third-party risk management program, including assurance that significant performance, legal and regulatory requirements are aligned with the contract entered into with the FRFI; and\n\nimpact of subcontracting arrangements on the FRFI\u2019s own concentration risk (refer to 2.2.3 above)."
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "question": "Under B-10, when should contingency plans and exit strategies be reviewed?",
+      "supported": true,
+      "facts": [
+        "Regularly, and more frequently after material changes to the third-party arrangements."
+      ],
+      "gold": [
+        {
+          "chunk_id": "a00d112b2b1c1bd9becd954d43da97c977cac826bc5a8014bfc71550f6795b91",
+          "sha256": "509bba6841401c1cb16d17c6efcf6dd384bb08d7ed04f868773e2a05706200ab",
+          "document_id": "osfi-b10",
+          "section_heading": "2.3.5.1 Contingency and exit strategies are developed to ensure continuity of critical services",
+          "excerpt": "documented plans for responding to severe but plausible scenarios, including prolonged and multiple disruptions.\n\nContingency plans and exit strategies should be reviewed regularly, and more frequently in the event of material changes to the third-party arrangements."
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "question": "Who is accountable for directing technology and cyber security operations under OSFI B-13?",
+      "supported": true,
+      "facts": [
+        "Senior Management; assign clear governance responsibility to senior officers."
+      ],
+      "gold": [
+        {
+          "chunk_id": "5680308b012b4bbdcb26a0f9bbec19acf685384cdbef201a8ed325e8cecb52d9",
+          "sha256": "95cb86cf8ccc80ec12824607503e4c3d053cc6a613e78f062f817ba296877852",
+          "document_id": "osfi-b13",
+          "section_heading": "1.1.1 Senior Management accountability is established",
+          "excerpt": "Senior Management is accountable for directing the FRFI\u2019s technology and cyber security operations and should assign clear responsibility for technology and cyber risk governance to senior officers. Examples of such roles include: Head of Information Technology; Chief Technology Officer (CTO); Chief Information Officer (CIO); Head of Cyber Security or Chief Information Security Officer (CISO). These roles should have appropriate stature and visibility throughout the institution."
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "question": "Under B-13, how should technology assets be inventoried and categorized?",
+      "supported": true,
+      "facts": [
+        "Maintain a current comprehensive lifecycle inventory.",
+        "Categorize by criticality or classification and document critical asset interdependencies where appropriate."
+      ],
+      "gold": [
+        {
+          "chunk_id": "58a3ec3bdd64d2dbd6d1da5f519a7e88ed1907b6b9ea4360766e18b8702c2ef7",
+          "sha256": "bdac5d4bac7fbd6063267fd39765f50dd10f4b1ac612e50bc34bc2313debf3a9",
+          "document_id": "osfi-b13",
+          "section_heading": "2.2.2 Inventory is maintained and assets are categorized",
+          "excerpt": "FRFIs should maintain a current and comprehensive asset management system, or inventory, that catalogues technology assets throughout their life cycle. Based on the FRFI\u2019s risk tolerance, this may include assets owned or leased by a FRFI, and third-party assets that store or process FRFI information or provide critical business services. The asset management system, or inventory, should be supported by:\n\nProcesses to categorize technology assets based on their criticality and/or classification. These processes should identify critical technology assets that are of high importance to the FRFI, or which could attract threat actors and cyber attacks, and therefore require enhanced cyber protections; and\n\nDocumented interdependencies between critical technology assets, where appropriate, to enable proper change and configuration management processes, and to assist in response to security and operational incidents, including cyber attacks."
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "question": "What does B-13 say about segregation of duties in the change management process?",
+      "supported": true,
+      "facts": [
+        "The same person cannot develop, authorize, execute and move code or releases between production and non-production."
+      ],
+      "gold": [
+        {
+          "chunk_id": "1b931663e76fbe8bc7c1411c350b174c82a44b70758d09404256b70e1b23e130",
+          "sha256": "4792bd2d0164767b212fe922d17bead6e49d8728d53d45d5af405cfcd50493b1",
+          "document_id": "osfi-b13",
+          "section_heading": "2.5.2 Segregation of duties controls against unauthorized changes",
+          "excerpt": "Segregation of duties is a key control used in protecting assets from unauthorized changes. FRFIs should segregate duties in the change management process to ensure that the same person cannot develop, authorize, execute and move code or releases between production and non-production technology environments."
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "question": "Under B-13, how should encryption keys be protected and cryptography reviewed?",
+      "supported": true,
+      "facts": [
+        "Protect keys from unauthorized access, usage and disclosure throughout the key lifecycle.",
+        "Regularly assess cryptography standards and technologies against current and emerging threats."
+      ],
+      "gold": [
+        {
+          "chunk_id": "8a09f07f6f6c80781a50c67ad68c2ac3e211189876f1575d628ab4eda41e5d78",
+          "sha256": "7ec934e4c0f94847aab08fa6adaf637c4f39cd7db24f8cbc0a2d1471eb155df6",
+          "document_id": "osfi-b13",
+          "section_heading": "3.2.2 Strong and secure cryptographic technologies are employed",
+          "excerpt": "FRFIs should implement and maintain strong cryptographic technologies to protect the authenticity, confidentiality and integrity of its technology assets. This includes controls for the protection of encryption keys from unauthorised access, usage and disclosure throughout the cryptographic key management life cycle. FRFIs should regularly assess its cryptography standard and technologies to remain effective against current and emerging threats."
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "question": "Under OSFI E-21, what do independent risk and compliance functions oversee and challenge?",
+      "supported": true,
+      "facts": [
+        "Risk and resilience activities of business and central functions."
+      ],
+      "gold": [
+        {
+          "chunk_id": "e62750220fe5675b689da1a981336b82524ac5ae8e771c301d6697ea5828ebc3",
+          "sha256": "db63b9a7fab808acadf766590adabe8e8c3c72e780e4a8c74bf4f3376edb7146",
+          "document_id": "osfi-e21",
+          "section_heading": "1.3 Independent oversight",
+          "excerpt": "The independent risk and compliance functions oversee and challenge the risk and resilience activities of the business and central functions, including by:\n\nEstablishing and overseeing adherence to the operational risk management framework and operational resilience approach.\n\nReviewing action plans to address identified gaps.\n\nEnsuring assessment and reporting tools are developed and monitored.\n\nEnsuring decisions, actions, and assessments are adequately documented.\n\nEnsuring that appropriate escalation channels are developed and maintained and that significant issues are resolved."
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "question": "Who provides independent assurance under E-21, and to whom?",
+      "supported": true,
+      "facts": [
+        "Internal audit or a similar function provides assurance to senior management and the board that operational risk controls, policies, procedures and systems are designed and operating effectively."
+      ],
+      "gold": [
+        {
+          "chunk_id": "864c44737840e55f7e89ab8f0b83367b844f0a750eea58201d8290c33b0932b3",
+          "sha256": "de037656d4f14bb02150e42ab791a01fbfabc5e22fd720612780258f575c48a1",
+          "document_id": "osfi-e21",
+          "section_heading": "1.4 Independent assurance",
+          "excerpt": "Internal audit or a similar function should provide independent assurance to senior management and the board of directors that operational risk management controls, policies and procedures, and systems are designed and operating effectively.\n\nOutcome 2: Operational risks are managed within approved risk appetite and risk limits"
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "question": "How do leading and lagging operational key risk indicators differ under E-21?",
+      "supported": true,
+      "facts": [
+        "Leading indicators identify risk exposures and emerging risks.",
+        "Lagging indicators show control weaknesses.",
+        "Both should have escalation protocols when risks approach or exceed limits."
+      ],
+      "gold": [
+        {
+          "chunk_id": "c34f576f4ec17c57584145239dd63e02367c4fe1962ab9e216d6aa467969bb26",
+          "sha256": "4a712d72320e60512019d7663f8557bcef3ddb6c4bea2c72b4cd62dbed4f3d3b",
+          "document_id": "osfi-e21",
+          "section_heading": "2.3.2 Key risk indicators",
+          "excerpt": "Key risk indicators are tools used to assess and monitor the main drivers of operational risk and assess whether the financial institution continues to operate within its operational risk limits. They may be developed using input from risk and control assessments (see section 2.3.1), operational risk events (see section 2.3.3), and other sources. Key risk indicators should be in place at various levels within the organization, including at the business unit and enterprise-wide levels.\n\nKey risk indicators may be either leading or lagging. Leading indicators are used to identify risk exposures and emerging risks. Lagging indicators provide insight into control weaknesses. Both should have escalation protocols to warn when risk levels approach or exceed limits. These warnings should prompt management actions to mitigate the risks."
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "question": "How does tolerance for disruption differ from risk appetite under E-21?",
+      "supported": true,
+      "facts": [
+        "Tolerance is maximum disruption withstandable in a crisis and would typically exceed risk appetite.",
+        "Risk appetite is risk willingly accepted to achieve business goals."
+      ],
+      "gold": [
+        {
+          "chunk_id": "0060fc1089e11bfb3b928ed793db1b3c6ff2c4a3a6d5a8dd233fc62594ea5700",
+          "sha256": "be901753bc658c5d9a66ddd557b3abfb276f2aac13daaf499603b133bc10e4cd",
+          "document_id": "osfi-e21",
+          "section_heading": "3.2 Establishing tolerances for disruption",
+          "excerpt": "Tolerances for disruption should set out the maximum level of disruption a financial institution can withstand across a range of severe but plausible scenarios.\n\nTolerances for disruption are different and would typically be greater than risk appetite. Risk appetite relates to the level of risk an institution would willingly accept to achieve its business goals; whereas tolerance for disruption relates to the maximum disruption an institution can withstand in a crisis.\n\nTolerances for disruption should consider the impact of a disruption on:\n\nOther critical operations of the financial institution that rely on the same resources.\n\nSystems, facilities, and third-party suppliers on which critical operations depend.\n\nOther financial institutions, the financial system, and the broader economy.\n\nWhen setting a tolerance for disruption, financial institutions should also be mindful that the use of critical operations may vary at different times of day and throughout the year.\n\n<PERSON> to Guideline B-10 on Third-Party Risk Management for expectations related to third-party risk.\n\nPrinciple 8: Scenario testing should regularly assess the ability of critical operations to persist through severe-but-plausible disruptions within established tolerances for disruption."
+        }
+      ]
+    },
+    {
+      "id": "q13",
+      "question": "Who must establish and implement a FINTRAC compliance program?",
+      "supported": true,
+      "facts": [
+        "All reporting entities."
+      ],
+      "gold": [
+        {
+          "chunk_id": "d41c1193e04a2c635f1eddd2d7f13572fb2a0da0858319f611aa39d61a3a06d2",
+          "sha256": "a2cdb0c6c63bdff2a9b6927c79a1f6ce54d9288bceee382bd6a8cf74b2e20212",
+          "document_id": "fintrac-compliance",
+          "section_heading": "1. What is a compliance program and what are its requirements",
+          "excerpt": "A compliance program is established and implemented by a reporting entity that is intended to ensure its compliance with the Proceeds of Crime (Money Laundering) and Terrorist Financing Act (the Act) and associated Regulations. A compliance program forms the basis for meeting all of your reporting, record keeping, client identification and other know-your-client requirements under the Act and associated Regulations. All reporting entities must establish and implement a compliance program.\n\nSpecifically, all reporting entities must implement the following elements of a compliance program:\n\nappoint a compliance officer who is responsible for implementing the program\n\ndevelop and apply written compliance policies and procedures that are kept up to date and, in the case of an entity, are approved by a senior officer\n\nconduct a risk assessment of your business to assess and document the risk of a money laundering or terrorist activity financing offence occurring in the course of your activities\n\ndevelop and maintain a written, ongoing compliance training program for your employees, agents or mandataries , or other authorized persons\n\ninstitute and document a plan for the ongoing compliance training program and deliver the training (training plan)\n\ninstitute and document a plan for a review of the compliance program for the purpose of testing its effectiveness, and carry out this review every two years at a minimum ( two-year effectiveness review)"
+        }
+      ]
+    },
+    {
+      "id": "q14",
+      "question": "What are enhanced measures in FINTRAC compliance program guidance?",
+      "supported": true,
+      "facts": [
+        "Additional controls and processes to manage and reduce risks associated with high-risk clients and business areas."
+      ],
+      "gold": [
+        {
+          "chunk_id": "cc1ceb1dd77a46aa75078a7d6530b4b71bfca3ff439d9a01cefa85c12d544f91",
+          "sha256": "f9b8ba5dbbea713bc2fea67b6192e2a724471bf54634d5b50fbe63a7e17fa33b",
+          "document_id": "fintrac-compliance",
+          "section_heading": "5. Enhanced measures",
+          "excerpt": "Enhanced measures are the additional controls and processes that you have put in place to manage and reduce the risks associated with your high-risk clients and business areas. As part of your compliance program, you must develop and apply written policies and procedures for the enhanced measures that you will take for any money laundering, terrorist activity financing or sanctions evasion risks you identify as high.\n\nYour policies and procedures for enhanced measures must include:\n\nthe additional steps, based on assessment of the risk, that you will take to verify the identity of a person or entity\n\nany other additional steps that you will take to mitigate the risks, including, but not limited to, the additional steps to: ensure client identification information and beneficial ownership information is updated at a frequency that is appropriate to the level of risk conduct ongoing monitoring of business relationships at a frequency that is appropriate to the level of risk\n\nEnhanced measures to mitigate risk can include:\n\nobtaining additional information on a client (for example, information from public databases and the internet)\n\nobtaining information on the client's source of funds or source of wealth\n\nobtaining information on the reasons for attempted or conducted transactions, or\n\nany other measures you deem appropriate\n\nProceeds of Crime (Money Laundering) and Terrorist Financing Regulations (SOR/2002-184) subsection 9.6(3) section 157"
+        }
+      ]
+    },
+    {
+      "id": "q15",
+      "question": "How frequently must FINTRAC compliance program effectiveness reviews start?",
+      "supported": true,
+      "facts": [
+        "At minimum every two years; start no later than 24 months from the start of the previous review, and complete it before starting the next."
+      ],
+      "gold": [
+        {
+          "chunk_id": "ec84968693d07934f4948061d5f9b44c681b36b26a2b58d6f5f4c438a930cb82",
+          "sha256": "63fa4c2e7aac6608b6b1620565b03e75186f1dea996448f5e8360c6e5a86a1bf",
+          "document_id": "fintrac-compliance",
+          "section_heading": "7. Two-year effectiveness review and plan requirements",
+          "excerpt": "A two-year effectiveness review is an evaluation that must be conducted every 2 years (at a minimum) to test the effectiveness of the elements of your compliance program (policies and procedures, risk assessment, and ongoing training program and plan). You must start your effectiveness review no later than 2 years (24 months) from the start of your previous review. You must also ensure that you have completed your previous review before you start the next review.\n\nThe purpose of an effectiveness review is to determine whether your compliance program has gaps or weaknesses that may prevent your business from effectively detecting and preventing money laundering, terrorist activity financing and sanctions evasion.\n\nYour effectiveness review will help you determine if:\n\nyour business practices reflect what is written in your compliance program documentation and if you are meeting your requirements under the Proceeds of Crime (Money Laundering) and Terrorist Financing Act (the Act) and associated Regulations\n\nyour risk assessment is effective at identifying and mitigating the money laundering, terrorist activity financing and sanctions evasion risks related to your clients, affiliates (if any), products, services, delivery channels, new developments or technology, and geographic locations where you do business"
+        }
+      ]
+    },
+    {
+      "id": "q16",
+      "question": "Does FINTRAC require a training program and plan for a sole proprietor with no employees, agents or authorized representatives?",
+      "supported": true,
+      "facts": [
+        "No training program or training plan is required for that sole proprietor personally."
+      ],
+      "gold": [
+        {
+          "chunk_id": "522eeb97ac3921d46a96b410d9ded1df7b854a794a61973a8eee4fd2401775cd",
+          "sha256": "32703b0b9a8690d72d0e4ff26c4ed593909f7fe8559bf87a94b6fe68c396075f",
+          "document_id": "fintrac-compliance",
+          "section_heading": "Training frequency",
+          "excerpt": "Note: If you are a sole proprietor with no employees, agents or other individuals authorized to act on your behalf, you are not required to have a training program nor are you required to have a training plan in place for yourself.\n\nProceeds of Crime (Money Laundering) and Terrorist Financing Regulations (SOR/2002-184) 156(1)(d) 156(1)(e)"
+        }
+      ]
+    },
+    {
+      "id": "q17",
+      "question": "For financial entities, when does FINTRAC require identity verification for large cash receipts?",
+      "supported": true,
+      "facts": [
+        "Receipt of $10,000 or more in cash, when the transaction takes place, subject to the 24-hour rule."
+      ],
+      "gold": [
+        {
+          "chunk_id": "a5291d2eac6eb663194692166d3ec6c1aeddcc4f0c7c3602470388e4d558c2b4",
+          "sha256": "6ab404afb2bec22d30d963821794ac4edc7058f8990ddf8d33edc80769186172",
+          "document_id": "fintrac-identification",
+          "section_heading": "a. Large cash transactions",
+          "excerpt": "You must verify the identity of every person or entity from which you receive $10,000 or more in cash when the transaction takes place. Footnote 1 This includes a situation where you are deemed to have received cash because you have authorized another person or entity to receive it on your behalf. Footnote 2\n\n**Note : This obligation is subject to the 24-hour rule . Footnote 3"
+        }
+      ]
+    },
+    {
+      "id": "q18",
+      "question": "Does FINTRAC suspicious-transaction identity verification depend on a minimum transaction amount?",
+      "supported": true,
+      "facts": [
+        "No; take reasonable measures to verify identity regardless of amount before sending the STR, including transactions normally exempt."
+      ],
+      "gold": [
+        {
+          "chunk_id": "7053a48534b46ae8acfad3f10c01ed228a53b90f5fbf7b00cd87265717bc7e8a",
+          "sha256": "b54806d228ecaed3b5a0f983d250d25d3e13174bbd2b58ffddf495d1d4405c0f",
+          "document_id": "fintrac-identification",
+          "section_heading": "c. Suspicious transactions",
+          "excerpt": "You must take reasonable measures to verify the identity of every person or entity that conducts or attempts to conduct a suspicious transaction, regardless of the transaction amount, and including transactions that would normally be exempt from client identification requirements, before sending a Suspicious Transaction Report (STR) . Footnote 7"
+        }
+      ]
+    },
+    {
+      "id": "q19",
+      "question": "Does keeping identification information up to date require financial entities to re-identify clients under FINTRAC guidance?",
+      "supported": true,
+      "facts": [
+        "No; update information based on risk assessment and policies without necessarily repeating identity verification methods."
+      ],
+      "gold": [
+        {
+          "chunk_id": "90f30112d8acf5f1c0961eab7880603fe8f09fb8e31a99c64d660bd25f863294",
+          "sha256": "1b3e1df587986769dd856f4eb1b2c8ef8e324fe5ce32cc281692286ac6bb5517",
+          "document_id": "fintrac-identification",
+          "section_heading": "2. What is the difference between verifying identity and keeping client identification information up to date?",
+          "excerpt": "As part of your ongoing monitoring requirements for business relationships , you must keep client identification information up to date, at a frequency that will vary based on your risk assessment, and as outlined in your policies and procedures. Footnote 33 This does not require you to re-identify clients in accordance with the methods to verify identity. As explained in the ongoing monitoring guidance, the requirement is only for you to keep client identification information up to date. This is understood to be information that you have about your client such as their name and address. In the case of a person, this would also include, but is not limited to, the nature of their principal business or their occupation; and in the case of an entity, the nature of its principal business."
+        }
+      ]
+    },
+    {
+      "id": "q20",
+      "question": "How quickly must financial entity records be available to FINTRAC after a request?",
+      "supported": true,
+      "facts": [
+        "Within 30 days."
+      ],
+      "gold": [
+        {
+          "chunk_id": "a56d7c855b656120a581ce5409e64a6c2ed3fbb2727d07e965dbd1456a8304e6",
+          "sha256": "89fda62709943058180de324c4a5ced70883abfda562a76d4e8bf27585b73cc1",
+          "document_id": "fintrac-records",
+          "section_heading": "2. What are my responsibilities when maintaining records?",
+          "excerpt": "In order to comply with your record keeping requirements, you must keep records in such a manner that they can be provided to FINTRAC within 30 days of a request. Footnote 94 The records may also be requested through a judicial order by law enforcement to support an investigation of money laundering or terrorist activity financing. A record (or a copy) may be kept in a machine-readable or electronic form, so long as a paper copy can easily be produced. Footnote 95\n\nEmployees who keep records for you are not required to keep them after their employment ends. The same is true for persons in a contractual relationship with you, when the contractual relationship ends, they no longer have to keep records for you. Footnote 96 You have to obtain and keep the records that were kept for you by an employee or a contractor before the end of the person's employment or contract.\n\nThere may be situations where you are required to keep records for purposes other than complying with your obligations under the PCMLTFA. For example, a federal or provincial regulator may require you to keep records in addition to those described in this guidance. If this is the case, you must still meet the requirements described in this guidance. For example, the retention period for your records can be longer than what is described, but it cannot be shorter."
+        }
+      ]
+    },
+    {
+      "id": "q21",
+      "question": "How long must a financial entity retain a copy of a Suspicious Transaction Report sent to FINTRAC?",
+      "supported": true,
+      "facts": [
+        "At least five years after the day the STR was submitted."
+      ],
+      "gold": [
+        {
+          "chunk_id": "adb5b4daf929c23b5a47fb0fdbb1986867114ee86e4175c58461cbf1277e6071",
+          "sha256": "b882354ed1760ff5bfa695cad89d7deaef906048113ce4a588aa1a50fa59d770",
+          "document_id": "fintrac-records",
+          "section_heading": "Suspicious Transaction Reports",
+          "excerpt": "When you submit a Suspicious Transaction Report (STR) to FINTRAC, you must keep a copy of it. Footnote 1\n\nRetention : At least five years after the day the STR was submitted. Footnote 2"
+        }
+      ]
+    },
+    {
+      "id": "q22",
+      "question": "How long must a financial entity retain a Large Cash Transaction Report copy, and when does that period start?",
+      "supported": true,
+      "facts": [
+        "At least five years from the date the LCTR was created."
+      ],
+      "gold": [
+        {
+          "chunk_id": "5a3ff9f2942d549a54e78f780c706e50178f2b57b402da02f22da55ec6825c21",
+          "sha256": "ec5756b6185b58725d2aa31b1825e9f501fd1ffc02ffa2b5a2ffc4c2a6f38ba0",
+          "document_id": "fintrac-records",
+          "section_heading": "Large Cash Transaction Reports",
+          "excerpt": "When you submit a Large Cash Transaction Report (LCTR) to FINTRAC, you must keep a copy of it. Footnote 5\n\nRetention : At least five years from the date the LCTR was created. Footnote 6"
+        }
+      ]
+    },
+    {
+      "id": "q23",
+      "question": "Under PIPEDA accountability guidance, what person must an organization appoint?",
+      "supported": true,
+      "facts": [
+        "Someone responsible for its PIPEDA compliance."
+      ],
+      "gold": [
+        {
+          "chunk_id": "50f31c3e4a0cd465319f4b33dce97c9e77ceb0cc19ea99ac5fa0c4f453647da3",
+          "sha256": "f2a48d8c23798712991fb6b91592957072bbfec0b511fb6fee434b2d838b9fdf",
+          "document_id": "pipeda-accountability",
+          "section_heading": "Your responsibilities",
+          "excerpt": "Comply with all 10 fair information principles.\n\nAppoint someone to be responsible for your organization\u2019s PIPEDA compliance.\n\nProtect all personal information held by your organization, including any personal information you transfer to a third party for processing.\n\nDevelop and implement personal information policies and practices."
+        }
+      ]
+    },
+    {
+      "id": "q24",
+      "question": "Does PIPEDA accountability extend to personal information transferred to a third party for processing?",
+      "supported": true,
+      "facts": [
+        "Yes; protect all held personal information including information transferred for processing."
+      ],
+      "gold": [
+        {
+          "chunk_id": "50f31c3e4a0cd465319f4b33dce97c9e77ceb0cc19ea99ac5fa0c4f453647da3",
+          "sha256": "f2a48d8c23798712991fb6b91592957072bbfec0b511fb6fee434b2d838b9fdf",
+          "document_id": "pipeda-accountability",
+          "section_heading": "Your responsibilities",
+          "excerpt": "Comply with all 10 fair information principles.\n\nAppoint someone to be responsible for your organization\u2019s PIPEDA compliance.\n\nProtect all personal information held by your organization, including any personal information you transfer to a third party for processing.\n\nDevelop and implement personal information policies and practices."
+        }
+      ]
+    },
+    {
+      "id": "q25",
+      "question": "Can individuals withdraw consent under PIPEDA consent guidance, and what qualifications apply?",
+      "supported": true,
+      "facts": [
+        "At any time, subject to legal or contractual restrictions and reasonable notice; inform them of withdrawal implications."
+      ],
+      "gold": [
+        {
+          "chunk_id": "94177eba76109df8857a4ccc357772bfb7e74afe023f3a50756e77e1c7af9688",
+          "sha256": "5b7cf85ce40cadcc77d09c39bcdac879ed3fa1a22f481019e9d9fa4b517758cb",
+          "document_id": "pipeda-consent",
+          "section_heading": "Your responsibilities",
+          "excerpt": "Meaningful consent is an essential element of PIPEDA . Organizations are generally required to obtain meaningful consent for the collection, use and disclosure of personal information.\n\nTo make consent meaningful, people must understand what they are consenting to. It is only considered valid if it is reasonable to expect that your customers will understand the nature, purpose and consequences of the collection, use or disclosure of their personal information.\n\nConsent can only be required for collections, uses or disclosures that are necessary to fulfil an explicitly specified and legitimate purpose. For non-integral collections, uses and disclosures, individuals must be given a choice.\n\nThe form of consent must take into account the sensitivity of the personal information. The way you seek consent will depend on the circumstances and type of information you are collecting.\n\nIndividuals can withdraw consent at any time, subject to legal or contractual restrictions and reasonable notice, and you must inform individuals of the implications of withdrawal."
+        }
+      ]
+    },
+    {
+      "id": "q26",
+      "question": "When does OPC consent guidance generally require express consent?",
+      "supported": true,
+      "facts": [
+        "Sensitive information; processing outside reasonable expectations; or meaningful residual risk of significant harm."
+      ],
+      "gold": [
+        {
+          "chunk_id": "e9c254157c617cce6e970fabe002ed975c2d7b33765fdbc7d52af3f8d86e4d40",
+          "sha256": "a3ed7c762c9a142d5920492d22fc22c438235b49ce16439df6a2ab64a193864d",
+          "document_id": "pipeda-consent",
+          "section_heading": "Organizations must generally obtain express consent when:",
+          "excerpt": "the information being collected, used or disclosed is sensitive;\n\nthe collection, use or disclosure is outside of the reasonable expectations of the individual; and/or,\n\nthe collection, use or disclosure creates a meaningful residual risk of significant harm."
+        }
+      ]
+    },
+    {
+      "id": "q27",
+      "question": "Does PIPEDA safeguards guidance prescribe particular security safeguards?",
+      "supported": true,
+      "facts": [
+        "No specific safeguards are prescribed; continually ensure adequate protection as technologies and risks evolve."
+      ],
+      "gold": [
+        {
+          "chunk_id": "75ac78ef5f117084475544e4eb9eda86cfc5f50d9181e5528949cf89127ea170",
+          "sha256": "447f108dd48769b3a0f092c092c900b432ec36e7be770698d93dc5c740e8ec33",
+          "document_id": "pipeda-safeguards",
+          "section_heading": "Your responsibilities",
+          "excerpt": "Protect personal information in a way that is appropriate to how sensitive it is.\n\nProtect all personal information (regardless of how it is stored) against loss, theft, or any unauthorized access, disclosure, copying, use or modification.\n\nNOTE: PIPEDA does not specify particular security safeguards that must be used. Your organization must continually ensure it adequately protects the personal information in its care as technologies evolve and as new risks emerge."
+        }
+      ]
+    },
+    {
+      "id": "q28",
+      "question": "What access principle should employees follow for sensitive files under OPC safeguards tips?",
+      "supported": true,
+      "facts": [
+        "Limit access to a need-to-know basis; keep sensitive files in secure areas or systems."
+      ],
+      "gold": [
+        {
+          "chunk_id": "1747a3b3969975d65a933184777f5b2926a277c0c83bda14d1a82c2428649d24",
+          "sha256": "72e51fb1b1566f53b3b84bd9c4824b0774fc33d7169a0685a66a648c51ad2e2e",
+          "document_id": "pipeda-safeguards",
+          "section_heading": "Tips",
+          "excerpt": "Make sure personal information that has no relevance to the transaction is either removed or blocked out when providing copies of information to others.\n\nKeep files that contain sensitive information in a secure area or on a secure computer system, and limit employee access to a \u201cneed-to-know\u201d basis."
+        }
+      ]
+    },
+    {
+      "id": "q29",
+      "question": "According to the PIPEDA business guide, what authority and support should the designated privacy official have?",
+      "supported": true,
+      "facts": [
+        "Senior management support and authority to intervene on privacy issues."
+      ],
+      "gold": [
+        {
+          "chunk_id": "e58f007eebee8578396536f5fcb0eb5159228207605bbccb671cc1866a3d44d7",
+          "sha256": "a70044b39c07990d04cd7a54151889eabf29aae34717ae67bec2e43df878bb92",
+          "document_id": "pipeda-business-guide",
+          "section_heading": "Page 10",
+          "excerpt": "8\nHow to fulfill these responsibilities\nDevelop a privacy management program\n \u25a0 This program should be designed, at a minimum,  \nto comply with the law, including the 10 fair \ninformation principles.\n \u25a0 It should identify your organization\u2019s designated \nprivacy official, and communicate that person\u2019s name \nor title internally and externally (e.g. on your website \nor in publications).\n \u25a0 Y our designated privacy official should have the \nsupport of senior management and the authority to \nintervene on privacy issues.\n \u25a0 Conduct a privacy impact assessment and threat \nanalysis of your organization\u2019s personal information \nhandling practices, including ongoing activities, new \ninitiatives, and new technologies.\n \u25a0 Start by using the following checklist:\n \u00bb What personal information do we collect and is \nit sensitive? (Sensitive information may require \nextra protection.)\n \u00bb Why do we collect it?\n \u00bb How do we collect it?\n \u00bb What do we use it for?\n \u00bb Where do we keep it?\n \u00bb How is it secured?\n \u00bb Who has access to or uses it?\n \u00bb Who do we share it with?\n \u00bb When is it disposed of?\n \u25a0 Develop, document and implement policies and \nprocedures to protect personal information:\n \u00bb Define the purposes of collection.\n \u00bb Obtain valid and meaningful consent.\n \u00bb Limit collection, use and disclosure.\n \u00bb Ensure information is correct, complete and current.\n \u00bb Ensure security measures are adequate to protect \ninformation."
+        }
+      ]
+    },
+    {
+      "id": "q30",
+      "question": "According to the PIPEDA business guide, what protections and transparency apply when information is sent outside Canada for processing?",
+      "supported": true,
+      "facts": [
+        "Assess transfer risks; ensure comparable protection through contractual or other means; limit use to contract purposes.",
+        "Advise customers of foreign processing and potential foreign court, law enforcement and national security access."
+      ],
+      "gold": [
+        {
+          "chunk_id": "c4bd457d90531dc344f0f222a0caca1b3864a5776c8b0425da12aa8371493aee",
+          "sha256": "c80d8662536a87f4d4ef9c77f117ef3e5c4e31e7967be44b630e22c3bf0d2d57",
+          "document_id": "pipeda-business-guide",
+          "section_heading": "Page 11",
+          "excerpt": "9\nTips\nTrain all staff so they can answer the following questions:\n \u25a0 How do I respond to public inquiries regarding our organization\u2019s privacy policies?\n \u25a0 What is valid and meaningful consent? When and how is it obtained?\n \u25a0 How do I recognize and process requests for access to personal information?\n \u25a0 T o whom should I refer privacy-related complaints?\n \u25a0 What are my organization\u2019s current or new initiatives relating to the protection of personal information?\nWhen transferring personal information to third parties for processing outside Canada:\n \u25a0 assess risks that could adversely impact the protection of personal information when it is transferred \nto third-party service providers operating outside of Canada;\n \u25a0 ensure through contractual or other means that the third party provides a level of protection of the \npersonal information comparable to that required in PIPEDA;\n \u25a0 limit the third party\u2019s use of the personal information to the purposes specified to fulfill the contract; \nand\n \u25a0 be transparent about your practices, including by advising customers their information may be sent \nto another jurisdiction for processing, and that while in another jurisdiction it may be accessed by \nthe courts, law enforcement and national security authorities.\nRelated links\n \u25a0 PIPEDA Fair Information Principle 1 \u2013 Accountability\n \u25a0 Getting Accountability Right with a Privacy Management Program\n \u25a0 Interpretation bulletin: Accountability"
+        }
+      ]
+    },
+    {
+      "id": "q31",
+      "question": "What exact password rotation interval in days does PIPEDA mandate for every organization?",
+      "supported": false,
+      "facts": [],
+      "gold": []
+    },
+    {
+      "id": "q32",
+      "question": "What mandatory brand of firewall must Canadian banks buy under OSFI B-13?",
+      "supported": false,
+      "facts": [],
+      "gold": []
+    },
+    {
+      "id": "q33",
+      "question": "What is the precise universal dollar fine for every FINTRAC compliance program violation?",
+      "supported": false,
+      "facts": [],
+      "gold": []
+    },
+    {
+      "id": "q34",
+      "question": "What is the weather forecast for Toronto tomorrow?",
+      "supported": false,
+      "facts": [],
+      "gold": []
+    }
+  ]
+}

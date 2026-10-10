@@ -25,6 +25,7 @@ src/compliancelens/
   ingestion.py                  ingestion orchestration and usage reports
   chat.py                       chat adapters and safe provider usage
   rag.py                        LangChain query pipeline, evidence checks, citations
+  safety.py                     local injection checks and fixture assessment
 tests/
   test_config.py                configuration validation tests
   test_spikes.py                local endpoint safety and spike checks
@@ -36,6 +37,8 @@ tests/
   test_ingestion.py              orchestration and failed-run reporting
   test_chat.py                   chat contracts, caps, redaction, and incomplete output
   test_rag.py                    retrieval, abstention, citations, and query journals
+  test_safety.py                 attacks, leakage boundaries, and safety assessment
+  fixtures/safety.json           synthetic PII, attacks, and benign controls
 infra/
   spikes/
     main.tf                     Phase 0 AWS provider and bucket
@@ -64,9 +67,10 @@ docs/
   phase-0-results.md             commands, measured spike results, prerequisites
   phase-1-results.md             measured corpus, ingestion, usage, and re-run evidence
   phase-2-results.md             measured RAG answers, refusals, usage, and limits
+  phase-3-results.md             measured safety fixtures, misses, and limitations
 ```
 
-Phases 0 and 1 are complete; Phase 2 files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
+Phases 0 through 2 are complete; Phase 3 files above are registered. Future files must be registered here first. No empty marker files or duplicate setup guides. Generated virtual environments, lockfiles, caches, and Terraform state belong at their tool-standard paths and are covered by .gitignore.
 
 ## Naming and ownership
 
@@ -84,6 +88,9 @@ Phases 0 and 1 are complete; Phase 2 files above are registered. Future files mu
 - Source choices and URLs live only in data/manifest.json. Document IDs use regulator-purpose slugs. Downloads stay in ignored data/raw, usage reports in ignored data/runs with UUID run names. Publish aggregated evidence in docs/phase-1-results.md.
 - Phase 2 settings are RETRIEVAL_TOP_K (initial 6), RETRIEVAL_MIN_SIMILARITY (initial 0.30), and QUERY_MAX_BYTES (initial 2000), registered once in .env.example. These bound context, gate weak retrieval, and bound question size; similarity is a heuristic, not a confidence probability. Chat uses the existing LLM_MAX_OUTPUT_TOKENS cap.
 - Phase 2 uses LangChain Documents, ChatPromptTemplate, and RunnableLambda to connect retrieval and generation. Queries only use manifest-listed public sources from a matching index. Ollama query embeddings use the search-query prefix while retaining the existing document-vector identity. Chat returns supported/claims JSON with numbered source references; rag.py validates references and builds citation metadata and URLs from stored provenance, never model-generated URLs. Unsupported, invalid, filtered, or truncated output is withheld. Logs record redacted outputs and prompt/question hashes, never raw questions or provider error bodies.
+- Phase 3 adds no settings, AWS resources, or tables. privacy.py owns the unchanged document-redaction policy and an independently named query-redaction policy for normalized questions, chat messages, outputs, and citation display. Query redaction adds conservative labelled DOB/account/address patterns, Canadian postal codes, and simple obfuscated emails. Document policy changes require a new index identity and re-ingestion.
+- safety.py owns normalized injection patterns and output checks. Known instruction-changing input is refused before provider calls; suspicious retrieved text or headings refuse before chat. Outputs with detected PII, dangerous markup, or instructions are withheld. Excerpt fields are redacted before JSON serialization; response JSON is parsed before individual field checks. Citation anchors containing PII are omitted; display metadata is redacted. Tracing on query chains and prompt rendering is disabled to avoid exporting question/context callbacks.
+- Safety assessment uses only synthetic local fixtures. Reports contain case IDs, expected-value removal outcomes, control changes, caught/missed attacks, and policy/model versions, never raw fixture values or prompts. Detector scores are not real-world precision/recall or attack success rates.
 - Shared logic has one implementation. Tests may use fixtures but must not copy production logic.
 
 ## Commands
@@ -142,6 +149,8 @@ Phase 1 commands: `uv run compliancelens ingest --download-only` records/downloa
 Presidio uses the pinned en_core_web_sm 3.8.0 official release wheel as a Python dependency. uv sync installs it; no runtime model downloads. Downloads validate official HTTPS hosts and redirects, consult robots.txt, limit size, and pause between requests. Retrieval timestamps are recorded in UTC.
 
 Phase 2 command: `uv run compliancelens ask "question"` returns an answer/refusal, trusted citations, provider identity, and token usage as JSON, and writes a query UUID journal in ignored data/runs. `uv run pytest --db-integration` includes real retrieval tests. Evaluation remains planned: `uv run compliancelens eval`, unavailable until Phase 4.
+
+Phase 3 command: `uv run compliancelens safety-check` runs local synthetic fixtures with zero embedding/chat requests and writes an ignored UUID safety report to data/runs. `uv run pytest tests/test_safety.py tests/test_privacy.py` verifies local guards; the full suite uses `uv run pytest --db-integration`.
 
 ## Code style
 

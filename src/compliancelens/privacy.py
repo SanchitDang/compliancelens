@@ -1,4 +1,6 @@
+import html
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass
 
@@ -6,6 +8,31 @@ import spacy
 from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
+
+
+def normalize_text(text: str) -> str:
+    text = unicodedata.normalize("NFKC", html.unescape(text))
+    return "".join(
+        character
+        for character in text
+        if character in "\n\t" or unicodedata.category(character) not in {"Cf", "Cc"}
+    )
+
+
+QUERY_PATTERNS = {
+    "EMAIL_ADDRESS": r"\b[\w.%+-]+\s*(?:\[at\]|\(at\)| at )\s*[\w.-]+"
+    r"\s*(?:\[dot\]|\(dot\)| dot )\s*[a-z]{2,}\b",
+    "DATE_OF_BIRTH": r"\b(?:DOB|date of birth|born)\s*[:=]\s*"
+    r"(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})",
+    "BANK_ACCOUNT": r"\b(?:bank\s+)?account(?:\s+(?:number|no\.?))?\s*[:=#]\s*"
+    r"([0-9][0-9 -]{4,29}[0-9])",
+    "STREET_ADDRESS": r"\b(?:home |mailing |street )?address\s*[:=]\s*"
+    r"(\d{1,6}\s+(?:[\w'-]+\s+){0,5}"
+    r"(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Boulevard|Blvd)\b"
+    r"(?:\s+[NSEW]{1,2})?)",
+    "CA_POSTAL_CODE": r"\b[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?"
+    r"\d[ABCEGHJ-NPRSTV-Z]\d\b",
+}
 
 
 @dataclass(frozen=True)
@@ -16,10 +43,12 @@ class RedactedText:
 
 class Redactor:
     policy = "presidio-english-sin-phone-section-v2"
+    query_policy = "presidio-query-labelled-pii-normalized-v1"
 
     def __init__(self, model: str) -> None:
         if not model or not spacy.util.is_package(model):
             raise ValueError("PII_SPACY_MODEL must name an installed local model; run uv sync")
+        self.model = model
         provider = NlpEngineProvider(
             nlp_configuration={
                 "nlp_engine_name": "spacy",
@@ -82,3 +111,21 @@ class Redactor:
         ]
         output = self.anonymizer.anonymize(text=text, analyzer_results=results)
         return RedactedText(output.text, dict(Counter(item.entity_type for item in output.items)))
+
+    def redact_query(self, text: str) -> RedactedText:
+        text = normalize_text(text)
+        counts: Counter[str] = Counter()
+        for entity, pattern in QUERY_PATTERNS.items():
+
+            def replace(match: re.Match, entity: str = entity) -> str:
+                counts[entity] += 1
+                start, end = match.span(1) if match.lastindex else match.span()
+                offset = match.start()
+                return (
+                    match.group()[: start - offset] + f"<{entity}>" + match.group()[end - offset :]
+                )
+
+            text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
+        result = self.redact(text)
+        counts.update(result.counts)
+        return RedactedText(result.text, dict(counts))

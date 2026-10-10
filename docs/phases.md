@@ -70,22 +70,22 @@ Deviations: generation uses a small direct SDK adapter within a LangChain pipeli
 
 ## Phase 3: Safety
 
-Status: not started.
+Status: done.
 
 Goal: assess and improve redaction and prompt injection defenses without overstating guarantees.
 
 Deliverables: Presidio assessment, redacted logs/input, untrusted context boundaries, input/output checks, PII and injection fixtures, measured missed cases.
 
-- [ ] Evaluate Presidio against Canadian PII examples and document recognizer limits.
-- [ ] Ensure all Azure text paths and logs pass through redaction.
-- [ ] Keep retrieved content separate from trusted instructions.
-- [ ] Add input/output checks and known injection attempts.
-- [ ] Test malicious source text, input attacks, and PII leakage paths.
-- [ ] Report caught and missed examples without claiming complete protection.
+- [x] Evaluate Presidio against Canadian PII examples and document recognizer limits.
+- [x] Ensure all Azure text paths and logs pass through redaction.
+- [x] Keep retrieved content separate from trusted instructions.
+- [x] Add input/output checks and known injection attempts.
+- [x] Test malicious source text, input attacks, and PII leakage paths.
+- [x] Report caught and missed examples without claiming complete protection.
 
-Run/test: pytest safety tests, fixture-based attack/PII report, and CLI refusal examples. Do not send raw PII to hosted providers for a test.
+Run/test: `uv run compliancelens safety-check`, `uv run pytest tests/test_safety.py tests/test_privacy.py`, and `uv run pytest --db-integration`. All 116 tests passed. The local assessment removed 17 of 21 expected query PII values and flagged 11 of 14 attacks, with misses and false positives recorded in phase-3-results.md. A CLI attack made zero provider calls; one ordinary public Azure query verified regression behavior and logged usage. No raw PII or poisoned source fixtures were sent to hosted providers.
 
-Deviations: the initial Azure redaction boundary is implemented earlier, as required for privacy.
+Deviations: the initial Azure redaction boundary was implemented earlier. Stronger query redaction has its own policy; the immutable document policy stays unchanged to preserve the ingested index and avoid unnecessary re-embedding. The safety assessment is local with mocked provider leakage tests, rather than a paid adversarial LLM benchmark. Broader PII/injection coverage is not claimed.
 
 ## Phase 4: Evaluation
 

@@ -43,12 +43,13 @@ class ChatBackend:
             "deployment": self.model,
             "api_version": version,
             "max_output_tokens": settings.llm_max_output_tokens,
+            "query_redaction_policy": redactor.query_policy,
             "endpoint_fingerprint": hashlib.sha256(endpoint.rstrip("/").encode()).hexdigest(),
         }
         self.prompt_hash = ""
 
     def generate(self, system: str, user: str) -> ChatResult:
-        system, user = (self.redactor.redact(text).text for text in (system, user))
+        system, user = (self.redactor.redact_query(text).text for text in (system, user))
         self.prompt_hash = hashlib.sha256(
             json.dumps({"system": system, "user": user, **self.identity}, sort_keys=True).encode()
         ).hexdigest()

@@ -74,7 +74,8 @@ class Embedder:
     def embed(self, texts: list[str], *, query: bool = False) -> EmbeddingBatch:
         if not texts or len(texts) > self.settings.embedding_batch_size:
             raise ValueError("Embedding input must be a nonempty configured-size batch")
-        redacted = [self.redactor.redact(text) for text in texts]
+        redact = self.redactor.redact_query if query else self.redactor.redact
+        redacted = [redact(text) for text in texts]
         safe_texts = [item.text for item in redacted]
         redactions = sum(sum(item.counts.values()) for item in redacted)
         if self.identity.backend == "azure":

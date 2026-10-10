@@ -108,22 +108,22 @@ Deviations: the initial judge grouped citation decisions by claim; an interrupte
 
 ## Phase 5: Infrastructure on Floci
 
-Status: not started.
+Status: done.
 
 Goal: reproducible dev and prod-style AWS-shaped infrastructure entirely on Floci.
 
 Deliverables: Terraform modules, two Terragrunt environments, raw/intermediate S3 storage, Step Functions ingestion workflow, parse/chunk/embed/query Lambdas, API Gateway, scoped IAM, and pgvector RDS.
 
-- [ ] Register module files and all names in design-principles.md first.
-- [ ] Define names once in Terraform locals and share references/outputs.
-- [ ] Scope IAM policies to required resources and operations.
-- [ ] Keep all provider endpoints local and state reliable.
-- [ ] Validate, plan, and apply both environments on Floci.
-- [ ] Record faithful, shallow, missing, or unsupported behavior per resource.
+- [x] Register module files and all names in design-principles.md first.
+- [x] Define names once in Terraform locals and share references/outputs.
+- [x] Scope IAM policies to required resources and operations.
+- [x] Keep all provider endpoints local and state reliable.
+- [x] Validate, plan, and apply both environments on Floci.
+- [x] Record faithful, shallow, missing, or unsupported behavior per resource.
 
-Run/test: Terraform fmt/validate and Terragrunt init/validate/plan/apply in each registered environment, followed by AWS API verification. Exact commands are added when implemented.
+Run/test: canonical commands are in design-principles.md. Both environments applied 33 resources and returned no changes on repeat plans. The verifier exercised S3 versioning, SQL/HNSW, API-to-Lambda 501 responses, explicit workflow failure, and actual IAM allow/deny requests. All 142 tests and formatting/secret checks passed. See phase-5-results.md for exact evidence and limitations.
 
-Deviations: none.
+Deviations: Phase 5 deploys explicit Lambda scaffolds; application packaging and behavior remain Phase 6. Dedicated local databases isolate dev/prod while preserving the indexed CLI database. IAM enforcement was enabled, with a verification-only role reusing the parse policy because service-only Lambda roles correctly deny admin assumption. Dummy SQL credentials use ephemeral write-only inputs so saved plan/state omit the password.
 
 ## Phase 6: Lambda and API
 

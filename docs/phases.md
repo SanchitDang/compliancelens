@@ -127,22 +127,22 @@ Deviations: Phase 5 deploys explicit Lambda scaffolds; application packaging and
 
 ## Phase 6: Lambda and API
 
-Status: not started.
+Status: done.
 
 Goal: working ingestion orchestration and query requests through emulated AWS services.
 
 Deliverables: Lambda packaging, artifact-based Step Functions flow, query API with validation, and real Floci requests.
 
-- [ ] Package Python dependencies for the Lambda runtime and architecture.
-- [ ] Wire parse, chunk, and embed stages end to end using S3 artifact references.
-- [ ] Configure selected-provider/network access without committing secrets.
-- [ ] Implement request validation and structured API error responses.
-- [ ] Test successful/failed ingestion executions and valid/invalid API requests.
-- [ ] Confirm citations, abstention, redaction, and model identity through the API.
+- [x] Package Python dependencies for the Lambda runtime and architecture.
+- [x] Wire parse, chunk, and embed stages end to end using S3 artifact references.
+- [x] Configure selected-provider/network access without committing secrets.
+- [x] Implement request validation and structured API error responses.
+- [x] Test successful/failed ingestion executions and valid/invalid API requests.
+- [x] Confirm citations, abstention, redaction, and model identity through the API.
 
-Run/test: local Step Functions executions and HTTP requests against the Terraform-output API endpoint, plus pytest handler tests. Record actual execution evidence.
+Run/test: build the image and apply both environments using the canonical design-principles.md commands. Run infra/application.py with pipeda-accountability and --verify-api for each environment. Both workflows and APIs passed, repeats made zero embedding calls, and actual identity mismatch returned HTTP 409 before provider calls. All 162 tests, formatting, validations, repeat plans, and secret checks passed. See phase-6-results.md for usage, reproduction, and limits.
 
-Deviations: none.
+Deviations: container images replace ZIP packaging because dependencies exceed the combined unpacked size budget. Keys stay in a local read-only .env mount. Fixed-name Lambda/API replacements use destroy-before-create with local downtime. Live ingestion uses one representative public document per environment to cap costs, preserving the original full CLI corpus. A citation timestamp serialization bug was fixed and regression-tested.
 
 ## Phase 7: Monitoring
 

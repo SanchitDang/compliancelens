@@ -22,3 +22,5 @@ variable "database_password" {
 }
 variable "log_retention_days" { type = number }
 variable "reserved_concurrency" { type = number }
+
+variable "image_uri" { type = string }

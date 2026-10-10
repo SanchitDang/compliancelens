@@ -50,6 +50,7 @@ locals {
     workflow_policy      = "${local.prefix}-ingestion-invoke"
     authorization_role   = "${local.prefix}-authorization-role"
     authorization_policy = "${local.prefix}-authorization-access"
+    image_repository     = "compliancelens-application"
     api                  = "${local.prefix}-api"
   }
 }
